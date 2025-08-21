@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import type { Confession } from './types';
 import { moderateConfession } from '@/ai/flows/moderate-confession';
+import { cookies } from 'next/headers';
 
 // --- In-memory "database" for demonstration ---
 const confessions: Confession[] = [
@@ -122,4 +123,33 @@ export async function submitConfession(prevState: any, formData: FormData) {
         message: 'An unexpected error occurred. Please try again later.'
     }
   }
+}
+
+const activationSchema = z.string().min(1, { message: 'Activation key is required.' });
+const ACTIVATION_KEY = 'WELCOME';
+
+export async function activateAccount(prevState: any, formData: FormData) {
+    const rawActivationKey = formData.get('activationKey');
+    const validatedFields = activationSchema.safeParse(rawActivationKey);
+
+    if (!validatedFields.success) {
+        return {
+            success: false,
+            message: validatedFields.error.issues[0].message,
+        };
+    }
+    
+    if (validatedFields.data !== ACTIVATION_KEY) {
+        return {
+            success: false,
+            message: 'Invalid activation key.',
+        };
+    }
+    
+    cookies().set('is_activated', 'true', { httpOnly: true, path: '/' });
+    
+    return {
+        success: true,
+        message: 'Account activated successfully! You can now post confessions.',
+    };
 }
