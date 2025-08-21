@@ -59,6 +59,11 @@ export default async function AdminPage({
             </CardHeader>
             <CardContent>
               <p className="font-code text-base">{confession.text}</p>
+               <div className="text-sm text-muted-foreground mt-4 pt-4 border-t flex gap-4">
+                  <span>Likes: {confession.likes}</span>
+                  <span>Dislikes: {confession.dislikes}</span>
+                  <span>Comments: {confession.comments.length}</span>
+               </div>
               {confession.status === 'pending' && (
                 <AdminActions confessionId={confession.id} />
               )}

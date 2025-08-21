@@ -2,10 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import type { Confession } from './types';
+import type { Confession, Comment } from './types';
 import { moderateConfession } from '@/ai/flows/moderate-confession';
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 
 // --- In-memory "database" for demonstration ---
 const confessions: Confession[] = [
@@ -14,14 +13,35 @@ const confessions: Confession[] = [
         text: 'I deployed an untested feature to production and it brought down the entire system for an hour. Nobody knows it was me.',
         timestamp: new Date(Date.now() - 3600000), // 1 hour ago
         anonHash: 'mockHash1',
-        status: 'approved'
+        status: 'approved',
+        likes: 10,
+        dislikes: 1,
+        comments: [
+            {
+                id: 'c1',
+                text: 'Happens to the best of us.',
+                timestamp: new Date(Date.now() - 3000000),
+                anonHash: 'mockHash3',
+                isAuthor: false,
+            },
+            {
+                id: 'c2',
+                text: 'I feel a bit better knowing I am not alone.',
+                timestamp: new Date(Date.now() - 2800000),
+                anonHash: 'mockHash1',
+                isAuthor: true,
+            }
+        ]
     },
     {
         id: '2',
         text: 'My side project is just a collection of Stack Overflow answers stitched together with duct tape and hope.',
         timestamp: new Date(Date.now() - 86400000), // 1 day ago
         anonHash: 'mockHash2',
-        status: 'approved'
+        status: 'approved',
+        likes: 42,
+        dislikes: 0,
+        comments: []
     },
 ];
 // --- End of in-memory "database" ---
@@ -88,7 +108,6 @@ export async function submitConfession(prevState: any, formData: FormData) {
     }
   }
 
-  // TODO: Implement rate limiting (e.g., check last post time for anonHash)
   const anonHash = cookies().get('anon_hash')?.value;
 
   if (!anonHash) {
@@ -108,10 +127,13 @@ export async function submitConfession(prevState: any, formData: FormData) {
         timestamp: new Date(),
         anonHash: anonHash,
         status: moderationResult.isToxic ? 'pending' : 'approved',
+        likes: 0,
+        dislikes: 0,
+        comments: [],
     };
 
     // In a real app, you'd save this to a database
-    confessions.push(newConfession);
+    confessions.unshift(newConfession);
 
     revalidatePath('/');
     
@@ -149,7 +171,7 @@ export async function activateAccount(prevState: any, formData: FormData) {
         };
     }
     
-    if (validatedFields.data !== ACTIVATION_KEY) {
+    if (validatedFields.data !== process.env.ACTIVATION_KEY) {
         return {
             success: false,
             message: 'Invalid activation key.',
@@ -166,4 +188,49 @@ export async function activateAccount(prevState: any, formData: FormData) {
         success: true,
         message: 'Account activated! You can now share your confessions.',
     };
+}
+
+export async function handleLike(confessionId: string) {
+    const confession = confessions.find(c => c.id === confessionId);
+    if (confession) {
+        confession.likes += 1;
+        revalidatePath('/');
+    }
+}
+
+export async function handleDislike(confessionId: string) {
+    const confession = confessions.find(c => c.id === confessionId);
+    if (confession) {
+        confession.dislikes += 1;
+        revalidatePath('/');
+    }
+}
+
+const commentSchema = z.string().min(1, "Comment cannot be empty.").max(500, "Comment is too long.");
+
+export async function addComment(confessionId: string, formData: FormData) {
+    const confession = confessions.find(c => c.id === confessionId);
+    const anonHash = cookies().get('anon_hash')?.value;
+
+    if (!confession || !anonHash) {
+        return { success: false, message: 'Could not add comment.' };
+    }
+
+    const validatedFields = commentSchema.safeParse(formData.get('comment'));
+    
+    if (!validatedFields.success) {
+        return { success: false, message: validatedFields.error.issues[0].message };
+    }
+
+    const newComment: Comment = {
+        id: crypto.randomUUID(),
+        text: validatedFields.data,
+        timestamp: new Date(),
+        anonHash: anonHash,
+        isAuthor: confession.anonHash === anonHash,
+    }
+
+    confession.comments.unshift(newComment);
+    revalidatePath('/');
+    return { success: true };
 }

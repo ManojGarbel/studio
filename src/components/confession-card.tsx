@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Card,
   CardContent,
@@ -5,29 +7,72 @@ import {
   CardHeader,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import type { Confession } from '@/lib/types';
+import type { Confession, Comment } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
-import { Heart, MessageSquare, Flag, ThumbsDown } from 'lucide-react';
+import {
+  Heart,
+  MessageSquare,
+  Flag,
+  ThumbsDown,
+  CornerDownRight,
+  Send,
+} from 'lucide-react';
 import { Avatar, AvatarFallback } from './ui/avatar';
+import { useState, useTransition, useRef } from 'react';
+import { handleLike, handleDislike, addComment } from '@/lib/actions';
+import { Textarea } from './ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { Badge } from './ui/badge';
 
 interface ConfessionCardProps {
   confession: Confession;
 }
 
 export function ConfessionCard({ confession }: ConfessionCardProps) {
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [showComments, setShowComments] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
   const timeAgo = formatDistanceToNow(new Date(confession.timestamp), {
     addSuffix: true,
   });
+
+  const onLike = () => {
+    startTransition(async () => {
+      await handleLike(confession.id);
+    });
+  };
+
+  const onDislike = () => {
+    startTransition(async () => {
+      await handleDislike(confession.id);
+    });
+  };
+
+  const handleCommentSubmit = async (formData: FormData) => {
+    startTransition(async () => {
+      const result = await addComment(confession.id, formData);
+      if (result?.success) {
+        formRef.current?.reset();
+      } else if (result?.message) {
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: result.message
+        });
+      }
+    });
+  };
 
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center gap-4">
         <Avatar>
-            <AvatarFallback>A</AvatarFallback>
+          <AvatarFallback>{confession.anonHash.substring(0, 1)}</AvatarFallback>
         </Avatar>
         <div className="flex flex-col">
-            <p className="font-semibold">Anonymous</p>
-            <p className="text-sm text-muted-foreground">{timeAgo}</p>
+          <p className="font-semibold">Anonymous</p>
+          <p className="text-sm text-muted-foreground">{timeAgo}</p>
         </div>
       </CardHeader>
       <CardContent>
@@ -35,22 +80,96 @@ export function ConfessionCard({ confession }: ConfessionCardProps) {
           <code>{confession.text}</code>
         </pre>
       </CardContent>
-      <CardFooter className="flex justify-between items-center gap-2">
-        <div className="flex gap-1">
-            <Button variant="ghost" size="icon" aria-label="Like">
-                <Heart className="h-5 w-5 text-muted-foreground" />
+      <CardFooter className="flex flex-col items-start gap-4">
+        <div className="flex justify-between items-center w-full">
+          <div className="flex gap-1 items-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label="Like"
+              onClick={onLike}
+              disabled={isPending}
+              className="flex items-center gap-2"
+            >
+              <Heart
+                className={`h-5 w-5 ${
+                  confession.likes > 0 ? 'text-red-500 fill-current' : 'text-muted-foreground'
+                }`}
+              />
+              <span>{confession.likes}</span>
             </Button>
-            <Button variant="ghost" size="icon" aria-label="Dislike">
-                <ThumbsDown className="h-5 w-5 text-muted-foreground" />
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label="Dislike"
+              onClick={onDislike}
+              disabled={isPending}
+              className="flex items-center gap-2"
+            >
+              <ThumbsDown className="h-5 w-5 text-muted-foreground" />
+              <span>{confession.dislikes}</span>
             </Button>
-            <Button variant="ghost" size="icon" aria-label="Comment">
-                <MessageSquare className="h-5 w-5 text-muted-foreground" />
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label="Comment"
+              onClick={() => setShowComments(!showComments)}
+              className="flex items-center gap-2"
+            >
+              <MessageSquare className="h-5 w-5 text-muted-foreground" />
+              <span>{confession.comments.length}</span>
             </Button>
-        </div>
-        <Button variant="ghost" size="sm" className="text-muted-foreground" aria-label="Report">
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground"
+            aria-label="Report"
+          >
             <Flag className="h-4 w-4 mr-2" />
             Report
-        </Button>
+          </Button>
+        </div>
+        {showComments && (
+          <div className="w-full pt-4 border-t">
+            <form action={handleCommentSubmit} ref={formRef} className="flex gap-2">
+              <Textarea
+                name="comment"
+                placeholder="Add a comment..."
+                rows={1}
+                required
+                className="font-code flex-1"
+              />
+              <Button type="submit" size="icon" disabled={isPending}>
+                <Send className="h-4 w-4" />
+              </Button>
+            </form>
+            <div className="mt-4 flex flex-col gap-4">
+                {confession.comments.map((comment) => (
+                    <div key={comment.id} className="flex gap-3">
+                        <Avatar className="h-8 w-8">
+                            <AvatarFallback>{comment.anonHash.substring(0, 1)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                                <span className="font-semibold text-sm">
+                                    {comment.isAuthor ? (
+                                        <Badge>Author</Badge>
+                                    ) : (
+                                        `Anon#${comment.anonHash.substring(0,4)}`
+                                    )}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                    {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
+                                </span>
+                            </div>
+                            <p className="text-sm mt-1">{comment.text}</p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+          </div>
+        )}
       </CardFooter>
     </Card>
   );
