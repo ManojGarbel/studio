@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import type { Confession } from './types';
 import { moderateConfession } from '@/ai/flows/moderate-confession';
-import { createServerClient } from './supabase/server';
+import { createServerClient, createServiceRoleServerClient } from './supabase/server';
 import { cookies } from 'next/headers';
 import { PII_REGEX } from './utils';
 import { isUserBanned } from './db';
@@ -57,7 +57,7 @@ export async function getConfessions(): Promise<Confession[]> {
 
 export async function getAllConfessionsForAdmin(): Promise<Confession[]> {
     const cookieStore = cookies();
-    const supabase = createServerClient(cookieStore);
+    const supabase = createServiceRoleServerClient(cookieStore);
     const { data, error } = await supabase
       .from('confessions')
       .select(
@@ -103,7 +103,7 @@ export async function updateConfessionStatus(
   status: 'approved' | 'rejected'
 ) {
   const cookieStore = cookies();
-  const supabase = createServerClient(cookieStore);
+  const supabase = createServiceRoleServerClient(cookieStore);
   const { data, error } = await supabase
     .from('confessions')
     .update({ status })
@@ -171,7 +171,7 @@ export async function submitConfession(prevState: any, formData: FormData) {
   try {
     // Moderation is done before approval, but we can still check here
     const moderationResult = await moderateConfession({ text: confessionText });
-    const supabase = createServerClient(cookieStore);
+    const supabase = createServiceRoleServerClient(cookieStore);
 
     const initialStatus = moderationResult.isToxic ? 'rejected' : 'pending';
 
@@ -244,7 +244,7 @@ export async function activateAccount(prevState: any, formData: FormData) {
 
 export async function handleLike(confessionId: string) {
     const cookieStore = cookies();
-    const supabase = createServerClient(cookieStore);
+    const supabase = createServiceRoleServerClient(cookieStore);
     const { error } = await supabase.rpc('increment_like', { row_id: confessionId });
     if (error) {
         console.error('Error liking post', error);
@@ -254,7 +254,7 @@ export async function handleLike(confessionId: string) {
 
 export async function handleDislike(confessionId: string) {
     const cookieStore = cookies();
-    const supabase = createServerClient(cookieStore);
+    const supabase = createServiceRoleServerClient(cookieStore);
     const { error } = await supabase.rpc('increment_dislike', { row_id: confessionId });
     if (error) {
         console.error('Error disliking post', error);
@@ -269,7 +269,7 @@ const commentSchema = z
 
 export async function addComment(confessionId: string, formData: FormData) {
     const cookieStore = cookies();
-    const supabase = createServerClient(cookieStore);
+    const supabase = createServiceRoleServerClient(cookieStore);
     const anonHash = cookieStore.get('anon_hash')?.value;
 
   if (!anonHash) {
@@ -317,7 +317,7 @@ export async function addComment(confessionId: string, formData: FormData) {
 
 export async function reportConfession(confessionId: string) {
     const cookieStore = cookies();
-    const supabase = createServerClient(cookieStore);
+    const supabase = createServiceRoleServerClient(cookieStore);
 
     const { data: confession, error: fetchError } = await supabase.from('confessions').select('status').eq('id', confessionId).single();
 
@@ -342,7 +342,7 @@ export async function reportConfession(confessionId: string) {
 
 export async function deleteConfession(confessionId: string) {
     const cookieStore = cookies();
-    const supabase = createServerClient(cookieStore);
+    const supabase = createServiceRoleServerClient(cookieStore);
     const { error } = await supabase.from('confessions').delete().eq('id', confessionId);
     if(error){
         return { success: false, message: 'Failed to delete confession.' };
@@ -354,7 +354,7 @@ export async function deleteConfession(confessionId: string) {
 
 export async function banUser(anonHash: string) {
     const cookieStore = cookies();
-    const supabase = createServerClient(cookieStore);
+    const supabase = createServiceRoleServerClient(cookieStore);
     const { error } = await supabase.from('banned_users').insert({ anon_hash: anonHash });
 
     if(error){

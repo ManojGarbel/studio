@@ -1,11 +1,11 @@
 import type { Confession } from './types';
-import { createServerClient } from './supabase/server';
+import { createServiceRoleServerClient } from './supabase/server';
 import { cookies } from 'next/headers';
 
 
 export async function isUserBanned(anonHash: string): Promise<boolean> {
     const cookieStore = cookies();
-    const supabase = createServerClient(cookieStore);
+    const supabase = createServiceRoleServerClient(cookieStore);
     const { data, error } = await supabase
       .from('banned_users')
       .select('anon_hash')
