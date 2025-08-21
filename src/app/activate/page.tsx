@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -59,6 +60,7 @@ function SubmitButton() {
 
 export default function ActivatePage() {
   const { toast } = useToast();
+  const router = useRouter();
   const [state, formAction, isPending] = useActionState(activateAccount, {
     message: '',
     success: false,
@@ -67,7 +69,16 @@ export default function ActivatePage() {
 
   useEffect(() => {
     if (!isPending && state.message) {
-      if (!state.success) {
+      if (state.success) {
+        toast({
+          title: 'Success!',
+          description: state.message,
+        });
+        setTimeout(() => {
+            router.push('/');
+            router.refresh();
+        }, 1000);
+      } else {
         toast({
           variant: 'destructive',
           title: 'Activation Error',
@@ -75,7 +86,7 @@ export default function ActivatePage() {
         });
       }
     }
-  }, [state, isPending, toast]);
+  }, [state, isPending, toast, router]);
 
   return (
     <div className="container max-w-lg mx-auto py-12 px-4">

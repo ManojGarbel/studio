@@ -5,7 +5,6 @@ import { z } from 'zod';
 import type { Confession } from './types';
 import { moderateConfession } from '@/ai/flows/moderate-confession';
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 
 // --- In-memory "database" for demonstration ---
 const confessions: Confession[] = [
@@ -159,7 +158,11 @@ export async function activateAccount(prevState: any, formData: FormData) {
     const anonHash = crypto.randomUUID();
     cookies().set('is_activated', 'true', { httpOnly: true, path: '/' });
     cookies().set('anon_hash', anonHash, { httpOnly: true, path: '/' });
-
+    
     revalidatePath('/');
-    redirect('/');
+    
+    return {
+        success: true,
+        message: 'Account activated! You can now share your confessions.',
+    };
 }
