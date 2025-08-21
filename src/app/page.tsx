@@ -1,15 +1,55 @@
+'use client';
+
 import ConfessionForm from '@/components/confession-form';
 import { ConfessionCard } from '@/components/confession-card';
+import type { Confession } from '@/lib/types';
 import { getConfessions } from '@/lib/actions';
-import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react';
+import Cookies from 'js-cookie';
 
-export const dynamic = 'force-dynamic';
+export default function Home() {
+  const [confessions, setConfessions] = useState<Confession[]>([]);
+  const [activated, setActivated] = useState<boolean | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
 
-export default async function Home() {
-  const confessions = await getConfessions();
-  const activated = cookies().has('is_activated');
+  useEffect(() => {
+    const fetchConfessionsAndStatus = async () => {
+      try {
+        const fetchedConfessions = await getConfessions();
+        setConfessions(fetchedConfessions);
+        const isActivated = Cookies.get('is_activated') === 'true';
+        setActivated(isActivated);
+      } catch (error) {
+        console.error("Failed to fetch confessions or activation status:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConfessionsAndStatus();
+    
+    // Optional: set up an interval to check for cookie changes if needed
+    const interval = setInterval(() => {
+      const isActivated = Cookies.get('is_activated') === 'true';
+      if (isActivated !== activated) {
+        setActivated(isActivated);
+        window.location.reload();
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+
+  }, [activated]);
+
+  if (loading) {
+      return (
+          <div className="container max-w-2xl mx-auto py-8 px-4 text-center">
+              <p>Loading...</p>
+          </div>
+      )
+  }
 
   return (
     <div className="container max-w-2xl mx-auto py-8 px-4">

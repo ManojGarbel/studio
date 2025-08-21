@@ -76,7 +76,7 @@ export default function ActivatePage() {
         });
         setTimeout(() => {
             router.push('/');
-        }, 1000);
+        }, 2000); // 2-second delay before redirecting
       } else {
         toast({
           variant: 'destructive',
