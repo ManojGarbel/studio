@@ -76,7 +76,6 @@ export default function ActivatePage() {
         });
         setTimeout(() => {
             router.push('/');
-            router.refresh();
         }, 1000);
       } else {
         toast({
