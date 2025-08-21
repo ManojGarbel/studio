@@ -34,6 +34,26 @@ export async function getConfessions(): Promise<Confession[]> {
     );
 }
 
+export async function getAllConfessionsForAdmin(): Promise<Confession[]> {
+    // In a real app, you'd fetch this from a database like Firestore
+    return Promise.resolve(
+      [...confessions]
+          .sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime())
+      );
+}
+
+export async function updateConfessionStatus(id: string, status: 'approved' | 'rejected') {
+    const confession = confessions.find(c => c.id === id);
+    if (confession) {
+        confession.status = status;
+        revalidatePath('/');
+        revalidatePath('/admin');
+        return { success: true, message: `Confession ${status}.`};
+    }
+    return { success: false, message: 'Confession not found.' };
+}
+
+
 const confessionSchema = z.string()
   .min(10, { message: 'Confession must be at least 10 characters long.' })
   .max(1000, { message: 'Confession must be no more than 1000 characters long.' });
