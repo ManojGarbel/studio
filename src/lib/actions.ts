@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import type { Confession, Comment } from './types';
+import type { Confession } from './types';
 import { moderateConfession } from '@/ai/flows/moderate-confession';
 import { createServerClient } from './supabase/server';
 import { cookies } from 'next/headers';
@@ -27,7 +27,9 @@ export async function getConfessions(): Promise<Confession[]> {
     `
     )
     .eq('status', 'approved')
-    .order('created_at', { ascending: false, foreignTable: 'comments' });
+    .order('created_at', { ascending: false })
+    .order('created_at', { foreignTable: 'comments', ascending: true });
+
 
   if (error) {
     console.error('Error fetching confessions:', error);
@@ -167,13 +169,16 @@ export async function submitConfession(prevState: any, formData: FormData) {
   }
 
   try {
+    // Moderation is done before approval, but we can still check here
     const moderationResult = await moderateConfession({ text: confessionText });
     const supabase = createServerClient(cookieStore);
+
+    const initialStatus = moderationResult.isToxic ? 'rejected' : 'pending';
 
     const { data, error } = await supabase.from('confessions').insert({
       text: confessionText,
       anon_hash: anonHash,
-      status: moderationResult.isToxic ? 'pending' : 'approved',
+      status: initialStatus,
     });
 
     if (error) {
@@ -185,19 +190,13 @@ export async function submitConfession(prevState: any, formData: FormData) {
     }
 
     revalidatePath('/');
+    revalidatePath('/admin');
     
-    if (moderationResult.isToxic) {
-        return {
-          success: true,
-          message:
-            'Your confession has been submitted and is pending review. Thank you.',
-        };
-      }
-  
-      return {
+    return {
         success: true,
-        message: 'Your confession has been posted anonymously!',
-      };
+        message:
+        'Your confession has been submitted and is pending review. Thank you.',
+    };
 
   } catch (error) {
     console.error('Error during confession submission:', error);
@@ -232,14 +231,14 @@ export async function activateAccount(prevState: any, formData: FormData) {
 
   const anonHash = crypto.randomUUID();
   const cookieStore = cookies();
-  cookieStore.set('is_activated', 'true', { httpOnly: true, path: '/' });
-  cookieStore.set('anon_hash', anonHash, { httpOnly: true, path: '/' });
-
-  revalidatePath('/');
+  
+  // These cookies will be set on the client-side after this action succeeds
+  // to ensure the UI updates immediately.
 
   return {
     success: true,
     message: 'Account activated! You can now share your confessions.',
+    anonHash: anonHash
   };
 }
 

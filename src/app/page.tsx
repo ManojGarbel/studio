@@ -30,12 +30,13 @@ export default function Home() {
 
     fetchConfessionsAndStatus();
     
-    // Optional: set up an interval to check for cookie changes if needed
+    // Set up an interval to check for cookie changes
+    // This ensures the page updates if activation happens in another tab
     const interval = setInterval(() => {
       const isActivated = Cookies.get('is_activated') === 'true';
       if (isActivated !== activated) {
         setActivated(isActivated);
-        window.location.reload();
+        // We don't need to reload, React state change will handle the UI update
       }
     }, 1000);
 
@@ -46,7 +47,7 @@ export default function Home() {
   if (loading) {
       return (
           <div className="container max-w-2xl mx-auto py-8 px-4 text-center">
-              <p>Loading...</p>
+              <p>Loading confessions...</p>
           </div>
       )
   }
@@ -76,7 +77,7 @@ export default function Home() {
           ) : (
             <div className="text-center text-muted-foreground py-12">
               <p>No confessions yet.</p>
-              <p>Be the first to share your coding secret!</p>
+              <p>Once confessions are approved by an admin, they will appear here.</p>
             </div>
           )}
         </div>

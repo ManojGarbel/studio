@@ -4,6 +4,7 @@ import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -64,20 +65,28 @@ export default function ActivatePage() {
   const [state, formAction, isPending] = useActionState(activateAccount, {
     message: '',
     success: false,
+    anonHash: null,
   });
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    if (!isPending && state.message) {
-      if (state.success) {
+    if (!isPending && state) {
+      if (state.success && state.anonHash) {
+        // Set cookies on the client side for immediate UI update
+        Cookies.set('is_activated', 'true', { expires: 365 });
+        Cookies.set('anon_hash', state.anonHash, { expires: 365 });
+
         toast({
           title: 'Success!',
           description: state.message,
         });
+
+        // Redirect after a short delay
         setTimeout(() => {
-            router.push('/');
-        }, 2000); // 2-second delay before redirecting
-      } else {
+          router.push('/');
+        }, 1500);
+
+      } else if (!state.success && state.message) {
         toast({
           variant: 'destructive',
           title: 'Activation Error',
@@ -95,7 +104,7 @@ export default function ActivatePage() {
             <CardTitle>Account Activation</CardTitle>
             <CardDescription>
               Enter the secret key provided by the admin to activate your
-              account.
+              account. The key is "WELCOME".
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -106,13 +115,7 @@ export default function ActivatePage() {
             />
           </CardContent>
           <CardFooter className="flex-col items-stretch gap-4">
-            {state?.message && !state.success && (
-              <Alert variant="destructive" className="w-full p-2 text-sm border-none">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{state.message}</AlertDescription>
-              </Alert>
-            )}
-            <SubmitButton />
+             <SubmitButton />
           </CardFooter>
         </form>
       </Card>

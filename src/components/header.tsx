@@ -19,10 +19,11 @@ const Header = () => {
       setAnonHash(hash);
     };
 
+    // Initial check
     checkActivation();
     
-    // Check for cookie changes periodically
-    const interval = setInterval(checkActivation, 1000);
+    // Check for cookie changes periodically to keep header in sync
+    const interval = setInterval(checkActivation, 500);
     return () => clearInterval(interval);
 
   }, []);

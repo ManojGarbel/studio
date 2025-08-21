@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { submitConfession } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { AlertCircle, Send } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -61,23 +61,25 @@ export default function ConfessionForm() {
   const { toast } = useToast();
   const [state, formAction] = useActionState(submitConfession, {
     message: '',
+    success: false,
   });
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    if (state.message && state.success === false) {
-      toast({
-        variant: 'destructive',
-        title: 'Submission Error',
-        description: state.message,
-      });
-    }
-    if (state.message && state.success === true) {
-      toast({
-        title: 'Success!',
-        description: state.message,
-      });
-      formRef.current?.reset();
+    if (state.message) {
+      if (state.success) {
+        toast({
+          title: 'Success!',
+          description: state.message,
+        });
+        formRef.current?.reset();
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Submission Error',
+          description: state.message,
+        });
+      }
     }
   }, [state, toast]);
 
@@ -87,7 +89,7 @@ export default function ConfessionForm() {
         <CardHeader>
           <CardTitle>Share Your Secret</CardTitle>
           <CardDescription>
-            Post your anonymous confession. Your identity is protected.
+            Post your anonymous confession. It will be reviewed by an admin before it's published.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -102,17 +104,8 @@ export default function ConfessionForm() {
           />
         </CardContent>
         <CardFooter className="flex justify-between items-center">
-          {state?.message && !state.success && (
-            <Alert
-              variant="destructive"
-              className="w-auto p-2 text-sm mr-4 border-none"
-            >
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{state.message}</AlertDescription>
-            </Alert>
-          )}
-          <div className="flex-grow"></div>
-          <SubmitButton />
+            <div className="flex-grow"></div>
+           <SubmitButton />
         </CardFooter>
       </form>
     </Card>
