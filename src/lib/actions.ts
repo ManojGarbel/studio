@@ -89,6 +89,15 @@ export async function submitConfession(prevState: any, formData: FormData) {
   }
 
   // TODO: Implement rate limiting (e.g., check last post time for anonHash)
+  const anonHash = cookies().get('anon_hash')?.value;
+
+  if (!anonHash) {
+    // This should not happen if the form is only shown to activated users
+    return {
+      success: false,
+      message: 'User not authenticated. Please activate your account.',
+    };
+  }
 
   try {
     const moderationResult = await moderateConfession({ text: confessionText });
@@ -97,7 +106,7 @@ export async function submitConfession(prevState: any, formData: FormData) {
         id: crypto.randomUUID(),
         text: confessionText,
         timestamp: new Date(),
-        anonHash: crypto.randomUUID(), // Mock anonHash
+        anonHash: anonHash,
         status: moderationResult.isToxic ? 'pending' : 'approved',
     };
 
@@ -147,7 +156,10 @@ export async function activateAccount(prevState: any, formData: FormData) {
         };
     }
     
+    const anonHash = crypto.randomUUID();
     cookies().set('is_activated', 'true', { httpOnly: true, path: '/' });
+    cookies().set('anon_hash', anonHash, { httpOnly: true, path: '/' });
+
     revalidatePath('/');
     redirect('/');
 }
