@@ -4,44 +4,116 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import type { Confession, Comment } from './types';
 import { moderateConfession } from '@/ai/flows/moderate-confession';
+import { createServerClient } from './supabase/server';
 import { cookies } from 'next/headers';
-import { confessions, addBannedUser, isUserBanned } from './db';
-
-// --- In-memory "database" is now in db.ts ---
+import { PII_REGEX } from './utils';
+import { isUserBanned } from './db';
 
 export async function getConfessions(): Promise<Confession[]> {
-  // In a real app, you'd fetch this from a database like Firestore
-  return Promise.resolve(
-    [...confessions]
-      .filter((c) => c.status === 'approved')
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-  );
+  const cookieStore = cookies();
+  const supabase = createServerClient(cookieStore);
+  const { data, error } = await supabase
+    .from('confessions')
+    .select(
+      `
+      id,
+      text,
+      created_at,
+      anon_hash,
+      status,
+      likes,
+      dislikes,
+      comments ( id, text, created_at, anon_hash, is_author )
+    `
+    )
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false, foreignTable: 'comments' });
+
+  if (error) {
+    console.error('Error fetching confessions:', error);
+    return [];
+  }
+
+  // Map Supabase response to Confession type
+  return data.map((item: any) => ({
+    id: item.id,
+    text: item.text,
+    timestamp: new Date(item.created_at),
+    anonHash: item.anon_hash,
+    status: item.status,
+    likes: item.likes,
+    dislikes: item.dislikes,
+    comments: item.comments.map((c: any) => ({
+      id: c.id,
+      text: c.text,
+      timestamp: new Date(c.created_at),
+      anonHash: c.anon_hash,
+      isAuthor: c.is_author,
+    })),
+  }));
 }
 
 export async function getAllConfessionsForAdmin(): Promise<Confession[]> {
-  // In a real app, you'd fetch this from a database like Firestore
-  return Promise.resolve(
-    [...confessions].sort(
-      (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
-    )
-  );
+    const cookieStore = cookies();
+    const supabase = createServerClient(cookieStore);
+    const { data, error } = await supabase
+      .from('confessions')
+      .select(
+        `
+        id,
+        text,
+        created_at,
+        anon_hash,
+        status,
+        likes,
+        dislikes,
+        comments ( id, text, created_at, anon_hash, is_author )
+      `
+      )
+      .order('created_at', { ascending: false });
+  
+    if (error) {
+      console.error('Error fetching confessions for admin:', error);
+      return [];
+    }
+  
+    return data.map((item: any) => ({
+      id: item.id,
+      text: item.text,
+      timestamp: new Date(item.created_at),
+      anonHash: item.anon_hash,
+      status: item.status,
+      likes: item.likes,
+      dislikes: item.dislikes,
+      comments: item.comments.map((c: any) => ({
+        id: c.id,
+        text: c.text,
+        timestamp: new Date(c.created_at),
+        anonHash: c.anon_hash,
+        isAuthor: c.is_author,
+      })),
+    }));
 }
+
 
 export async function updateConfessionStatus(
   id: string,
   status: 'approved' | 'rejected'
 ) {
-  const confession = confessions.find((c) => c.id === id);
-  if (confession) {
-    if (confession.status === 'approved' && status === 'approved') {
-      return { success: true, message: `Confession is already approved.` };
-    }
-    confession.status = status;
-    revalidatePath('/');
-    revalidatePath('/admin');
-    return { success: true, message: `Confession ${status}.` };
+  const cookieStore = cookies();
+  const supabase = createServerClient(cookieStore);
+  const { data, error } = await supabase
+    .from('confessions')
+    .update({ status })
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error updating confession status:', error);
+    return { success: false, message: 'Failed to update confession.' };
   }
-  return { success: false, message: 'Confession not found.' };
+  revalidatePath('/');
+  revalidatePath('/admin');
+  return { success: true, message: `Confession ${status}.` };
 }
 
 const confessionSchema = z
@@ -51,13 +123,9 @@ const confessionSchema = z
     message: 'Confession must be no more than 1000 characters long.',
   });
 
-const PII_REGEX = {
-  EMAIL: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi,
-  PHONE: /(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/g,
-};
-
 export async function submitConfession(prevState: any, formData: FormData) {
-  const anonHash = cookies().get('anon_hash')?.value;
+  const cookieStore = cookies();
+  const anonHash = cookieStore.get('anon_hash')?.value;
 
   if (!anonHash) {
     return {
@@ -65,7 +133,7 @@ export async function submitConfession(prevState: any, formData: FormData) {
       message: 'User not authenticated. Please activate your account.',
     };
   }
-
+  
   const banned = await isUserBanned(anonHash);
   if (banned) {
       return {
@@ -98,38 +166,39 @@ export async function submitConfession(prevState: any, formData: FormData) {
     };
   }
 
-
   try {
     const moderationResult = await moderateConfession({ text: confessionText });
+    const supabase = createServerClient(cookieStore);
 
-    const newConfession: Confession = {
-      id: crypto.randomUUID(),
+    const { data, error } = await supabase.from('confessions').insert({
       text: confessionText,
-      timestamp: new Date(),
-      anonHash: anonHash,
+      anon_hash: anonHash,
       status: moderationResult.isToxic ? 'pending' : 'approved',
-      likes: 0,
-      dislikes: 0,
-      comments: [],
-    };
+    });
 
-    // In a real app, you'd save this to a database
-    confessions.unshift(newConfession);
-
-    revalidatePath('/');
-
-    if (newConfession.status === 'pending') {
+    if (error) {
+      console.error('Error submitting confession:', error);
       return {
-        success: true,
-        message:
-          'Your confession has been submitted and is pending review. Thank you.',
+        success: false,
+        message: 'Failed to submit confession to the database.',
       };
     }
 
-    return {
-      success: true,
-      message: 'Your confession has been posted anonymously!',
-    };
+    revalidatePath('/');
+    
+    if (moderationResult.isToxic) {
+        return {
+          success: true,
+          message:
+            'Your confession has been submitted and is pending review. Thank you.',
+        };
+      }
+  
+      return {
+        success: true,
+        message: 'Your confession has been posted anonymously!',
+      };
+
   } catch (error) {
     console.error('Error during confession submission:', error);
     return {
@@ -162,8 +231,9 @@ export async function activateAccount(prevState: any, formData: FormData) {
   }
 
   const anonHash = crypto.randomUUID();
-  cookies().set('is_activated', 'true', { httpOnly: true, path: '/' });
-  cookies().set('anon_hash', anonHash, { httpOnly: true, path: '/' });
+  const cookieStore = cookies();
+  cookieStore.set('is_activated', 'true', { httpOnly: true, path: '/' });
+  cookieStore.set('anon_hash', anonHash, { httpOnly: true, path: '/' });
 
   revalidatePath('/');
 
@@ -174,19 +244,23 @@ export async function activateAccount(prevState: any, formData: FormData) {
 }
 
 export async function handleLike(confessionId: string) {
-  const confession = confessions.find((c) => c.id === confessionId);
-  if (confession) {
-    confession.likes += 1;
+    const cookieStore = cookies();
+    const supabase = createServerClient(cookieStore);
+    const { error } = await supabase.rpc('increment_like', { row_id: confessionId });
+    if (error) {
+        console.error('Error liking post', error);
+    }
     revalidatePath('/');
-  }
 }
 
 export async function handleDislike(confessionId: string) {
-  const confession = confessions.find((c) => c.id === confessionId);
-  if (confession) {
-    confession.dislikes += 1;
+    const cookieStore = cookies();
+    const supabase = createServerClient(cookieStore);
+    const { error } = await supabase.rpc('increment_dislike', { row_id: confessionId });
+    if (error) {
+        console.error('Error disliking post', error);
+    }
     revalidatePath('/');
-  }
 }
 
 const commentSchema = z
@@ -195,11 +269,12 @@ const commentSchema = z
   .max(500, 'Comment is too long.');
 
 export async function addComment(confessionId: string, formData: FormData) {
-  const confession = confessions.find((c) => c.id === confessionId);
-  const anonHash = cookies().get('anon_hash')?.value;
+    const cookieStore = cookies();
+    const supabase = createServerClient(cookieStore);
+    const anonHash = cookieStore.get('anon_hash')?.value;
 
-  if (!confession || !anonHash) {
-    return { success: false, message: 'Could not add comment.' };
+  if (!anonHash) {
+    return { success: false, message: 'Could not add comment. User not authenticated.' };
   }
 
   const banned = await isUserBanned(anonHash);
@@ -209,58 +284,87 @@ export async function addComment(confessionId: string, formData: FormData) {
           message: 'You are banned from posting comments.'
       }
   }
-
+  
   const validatedFields = commentSchema.safeParse(formData.get('comment'));
 
   if (!validatedFields.success) {
     return { success: false, message: validatedFields.error.issues[0].message };
   }
 
-  const newComment: Comment = {
-    id: crypto.randomUUID(),
-    text: validatedFields.data,
-    timestamp: new Date(),
-    anonHash: anonHash,
-    isAuthor: confession.anonHash === anonHash,
-  };
+  const { data: confessionAuthor } = await supabase.from('confessions').select('anon_hash').eq('id', confessionId).single();
+  
+  if(!confessionAuthor){
+      return { success: false, message: 'Confession not found.' };
+  }
 
-  confession.comments.unshift(newComment);
+  const isAuthor = confessionAuthor.anon_hash === anonHash;
+
+  const { error } = await supabase.from('comments').insert({
+      text: validatedFields.data,
+      confession_id: confessionId,
+      anon_hash: anonHash,
+      is_author: isAuthor
+  })
+
+  if(error){
+      console.error('Error adding comment', error);
+      return { success: false, message: "Failed to add comment." };
+  }
+
   revalidatePath('/');
   return { success: true };
 }
 
 
 export async function reportConfession(confessionId: string) {
-    const confession = confessions.find(c => c.id === confessionId);
-    if (confession) {
-        if (confession.status === 'pending') {
-            return { success: false, message: 'This confession is already pending review.' };
-        }
-        confession.status = 'pending';
-        revalidatePath('/');
-        revalidatePath('/admin');
-        return { success: true, message: 'Confession reported for review.' };
+    const cookieStore = cookies();
+    const supabase = createServerClient(cookieStore);
+
+    const { data: confession, error: fetchError } = await supabase.from('confessions').select('status').eq('id', confessionId).single();
+
+    if(fetchError || !confession) {
+        return { success: false, message: 'Confession not found.' };
     }
-    return { success: false, message: 'Confession not found.' };
+
+    if(confession.status === 'pending') {
+        return { success: false, message: 'This confession is already pending review.' };
+    }
+
+    const { error } = await supabase.from('confessions').update({ status: 'pending' }).eq('id', confessionId);
+    
+    if (error) {
+        return { success: false, message: 'Failed to report confession.' };
+    }
+
+    revalidatePath('/');
+    revalidatePath('/admin');
+    return { success: true, message: 'Confession reported for review.' };
 }
 
 export async function deleteConfession(confessionId: string) {
-    const index = confessions.findIndex(c => c.id === confessionId);
-    if (index > -1) {
-        confessions.splice(index, 1);
-        revalidatePath('/');
-        revalidatePath('/admin');
-        return { success: true, message: 'Confession deleted.' };
+    const cookieStore = cookies();
+    const supabase = createServerClient(cookieStore);
+    const { error } = await supabase.from('confessions').delete().eq('id', confessionId);
+    if(error){
+        return { success: false, message: 'Failed to delete confession.' };
     }
-    return { success: false, message: 'Confession not found.' };
+    revalidatePath('/');
+    revalidatePath('/admin');
+    return { success: true, message: 'Confession deleted.' };
 }
 
 export async function banUser(anonHash: string) {
-    try {
-        await addBannedUser(anonHash);
-        revalidatePath('/admin');
-        return { success: true, message: `User ${anonHash.substring(0,6)}... has been banned.` };
-    } catch (e: any) {
-        return { success: false, message: e.message };
+    const cookieStore = cookies();
+    const supabase = createServerClient(cookieStore);
+    const { error } = await supabase.from('banned_users').insert({ anon_hash: anonHash });
+
+    if(error){
+        if(error.code === '23505'){ // unique constraint violation
+            return { success: false, message: 'User is already banned.' };
+        }
+        return { success: false, message: 'Failed to ban user.' };
     }
+    
+    revalidatePath('/admin');
+    return { success: true, message: `User ${anonHash.substring(0,6)}... has been banned.` };
 }
