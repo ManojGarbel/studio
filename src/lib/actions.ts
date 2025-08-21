@@ -5,90 +5,76 @@ import { z } from 'zod';
 import type { Confession, Comment } from './types';
 import { moderateConfession } from '@/ai/flows/moderate-confession';
 import { cookies } from 'next/headers';
+import { confessions, addBannedUser, isUserBanned } from './db';
 
-// --- In-memory "database" for demonstration ---
-const confessions: Confession[] = [
-    {
-        id: '1',
-        text: 'I deployed an untested feature to production and it brought down the entire system for an hour. Nobody knows it was me.',
-        timestamp: new Date(Date.now() - 3600000), // 1 hour ago
-        anonHash: 'mockHash1',
-        status: 'approved',
-        likes: 10,
-        dislikes: 1,
-        comments: [
-            {
-                id: 'c1',
-                text: 'Happens to the best of us.',
-                timestamp: new Date(Date.now() - 3000000),
-                anonHash: 'mockHash3',
-                isAuthor: false,
-            },
-            {
-                id: 'c2',
-                text: 'I feel a bit better knowing I am not alone.',
-                timestamp: new Date(Date.now() - 2800000),
-                anonHash: 'mockHash1',
-                isAuthor: true,
-            }
-        ]
-    },
-    {
-        id: '2',
-        text: 'My side project is just a collection of Stack Overflow answers stitched together with duct tape and hope.',
-        timestamp: new Date(Date.now() - 86400000), // 1 day ago
-        anonHash: 'mockHash2',
-        status: 'approved',
-        likes: 42,
-        dislikes: 0,
-        comments: []
-    },
-];
-// --- End of in-memory "database" ---
-
+// --- In-memory "database" is now in db.ts ---
 
 export async function getConfessions(): Promise<Confession[]> {
   // In a real app, you'd fetch this from a database like Firestore
   return Promise.resolve(
     [...confessions]
-        .filter(c => c.status === 'approved')
-        .sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime())
-    );
+      .filter((c) => c.status === 'approved')
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+  );
 }
 
 export async function getAllConfessionsForAdmin(): Promise<Confession[]> {
-    // In a real app, you'd fetch this from a database like Firestore
-    return Promise.resolve(
-      [...confessions]
-          .sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime())
-      );
+  // In a real app, you'd fetch this from a database like Firestore
+  return Promise.resolve(
+    [...confessions].sort(
+      (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+    )
+  );
 }
 
-export async function updateConfessionStatus(id: string, status: 'approved' | 'rejected') {
-    const confession = confessions.find(c => c.id === id);
-    if (confession) {
-        confession.status = status;
-        revalidatePath('/');
-        revalidatePath('/admin');
-        return { success: true, message: `Confession ${status}.`};
+export async function updateConfessionStatus(
+  id: string,
+  status: 'approved' | 'rejected'
+) {
+  const confession = confessions.find((c) => c.id === id);
+  if (confession) {
+    if (confession.status === 'approved' && status === 'approved') {
+      return { success: true, message: `Confession is already approved.` };
     }
-    return { success: false, message: 'Confession not found.' };
+    confession.status = status;
+    revalidatePath('/');
+    revalidatePath('/admin');
+    return { success: true, message: `Confession ${status}.` };
+  }
+  return { success: false, message: 'Confession not found.' };
 }
 
-
-const confessionSchema = z.string()
+const confessionSchema = z
+  .string()
   .min(10, { message: 'Confession must be at least 10 characters long.' })
-  .max(1000, { message: 'Confession must be no more than 1000 characters long.' });
+  .max(1000, {
+    message: 'Confession must be no more than 1000 characters long.',
+  });
 
 const PII_REGEX = {
-    EMAIL: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi,
-    PHONE: /(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/g,
+  EMAIL: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi,
+  PHONE: /(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/g,
 };
 
-
 export async function submitConfession(prevState: any, formData: FormData) {
+  const anonHash = cookies().get('anon_hash')?.value;
+
+  if (!anonHash) {
+    return {
+      success: false,
+      message: 'User not authenticated. Please activate your account.',
+    };
+  }
+
+  const banned = await isUserBanned(anonHash);
+  if (banned) {
+      return {
+          success: false,
+          message: 'You are banned from posting confessions.'
+      }
+  }
+
   const rawConfession = formData.get('confession');
-  
   const validatedFields = confessionSchema.safeParse(rawConfession);
 
   if (!validatedFields.success) {
@@ -101,136 +87,180 @@ export async function submitConfession(prevState: any, formData: FormData) {
   const confessionText = validatedFields.data;
 
   // Basic PII filtering
-  if (confessionText.match(PII_REGEX.EMAIL) || confessionText.match(PII_REGEX.PHONE)) {
+  if (
+    confessionText.match(PII_REGEX.EMAIL) ||
+    confessionText.match(PII_REGEX.PHONE)
+  ) {
     return {
       success: false,
-      message: 'Confession appears to contain personal information. Please remove it.'
-    }
-  }
-
-  const anonHash = cookies().get('anon_hash')?.value;
-
-  if (!anonHash) {
-    // This should not happen if the form is only shown to activated users
-    return {
-      success: false,
-      message: 'User not authenticated. Please activate your account.',
+      message:
+        'Confession appears to contain personal information. Please remove it.',
     };
   }
 
+
   try {
     const moderationResult = await moderateConfession({ text: confessionText });
-    
+
     const newConfession: Confession = {
-        id: crypto.randomUUID(),
-        text: confessionText,
-        timestamp: new Date(),
-        anonHash: anonHash,
-        status: moderationResult.isToxic ? 'pending' : 'approved',
-        likes: 0,
-        dislikes: 0,
-        comments: [],
+      id: crypto.randomUUID(),
+      text: confessionText,
+      timestamp: new Date(),
+      anonHash: anonHash,
+      status: moderationResult.isToxic ? 'pending' : 'approved',
+      likes: 0,
+      dislikes: 0,
+      comments: [],
     };
 
     // In a real app, you'd save this to a database
     confessions.unshift(newConfession);
 
     revalidatePath('/');
-    
+
     if (newConfession.status === 'pending') {
-        return {
-            success: true,
-            message: 'Your confession has been submitted and is pending review. Thank you.',
-        }
+      return {
+        success: true,
+        message:
+          'Your confession has been submitted and is pending review. Thank you.',
+      };
     }
 
     return {
       success: true,
       message: 'Your confession has been posted anonymously!',
     };
-  } catch(error) {
-    console.error("Error during confession submission:", error);
+  } catch (error) {
+    console.error('Error during confession submission:', error);
     return {
-        success: false,
-        message: 'An unexpected error occurred. Please try again later.'
-    }
+      success: false,
+      message: 'An unexpected error occurred. Please try again later.',
+    };
   }
 }
 
-const activationSchema = z.string().min(1, { message: 'Activation key is required.' });
-const ACTIVATION_KEY = 'WELCOME';
+const activationSchema = z
+  .string()
+  .min(1, { message: 'Activation key is required.' });
 
 export async function activateAccount(prevState: any, formData: FormData) {
-    const rawActivationKey = formData.get('activationKey');
-    const validatedFields = activationSchema.safeParse(rawActivationKey);
+  const rawActivationKey = formData.get('activationKey');
+  const validatedFields = activationSchema.safeParse(rawActivationKey);
 
-    if (!validatedFields.success) {
-        return {
-            success: false,
-            message: validatedFields.error.issues[0].message,
-        };
-    }
-    
-    if (validatedFields.data !== process.env.ACTIVATION_KEY) {
-        return {
-            success: false,
-            message: 'Invalid activation key.',
-        };
-    }
-    
-    const anonHash = crypto.randomUUID();
-    cookies().set('is_activated', 'true', { httpOnly: true, path: '/' });
-    cookies().set('anon_hash', anonHash, { httpOnly: true, path: '/' });
-    
-    revalidatePath('/');
-
+  if (!validatedFields.success) {
     return {
-        success: true,
-        message: 'Account activated! You can now share your confessions.',
+      success: false,
+      message: validatedFields.error.issues[0].message,
     };
+  }
+
+  if (validatedFields.data !== process.env.ACTIVATION_KEY) {
+    return {
+      success: false,
+      message: 'Invalid activation key.',
+    };
+  }
+
+  const anonHash = crypto.randomUUID();
+  cookies().set('is_activated', 'true', { httpOnly: true, path: '/' });
+  cookies().set('anon_hash', anonHash, { httpOnly: true, path: '/' });
+
+  revalidatePath('/');
+
+  return {
+    success: true,
+    message: 'Account activated! You can now share your confessions.',
+  };
 }
 
 export async function handleLike(confessionId: string) {
-    const confession = confessions.find(c => c.id === confessionId);
-    if (confession) {
-        confession.likes += 1;
-        revalidatePath('/');
-    }
+  const confession = confessions.find((c) => c.id === confessionId);
+  if (confession) {
+    confession.likes += 1;
+    revalidatePath('/');
+  }
 }
 
 export async function handleDislike(confessionId: string) {
-    const confession = confessions.find(c => c.id === confessionId);
-    if (confession) {
-        confession.dislikes += 1;
-        revalidatePath('/');
-    }
+  const confession = confessions.find((c) => c.id === confessionId);
+  if (confession) {
+    confession.dislikes += 1;
+    revalidatePath('/');
+  }
 }
 
-const commentSchema = z.string().min(1, "Comment cannot be empty.").max(500, "Comment is too long.");
+const commentSchema = z
+  .string()
+  .min(1, 'Comment cannot be empty.')
+  .max(500, 'Comment is too long.');
 
 export async function addComment(confessionId: string, formData: FormData) {
+  const confession = confessions.find((c) => c.id === confessionId);
+  const anonHash = cookies().get('anon_hash')?.value;
+
+  if (!confession || !anonHash) {
+    return { success: false, message: 'Could not add comment.' };
+  }
+
+  const banned = await isUserBanned(anonHash);
+  if (banned) {
+      return {
+          success: false,
+          message: 'You are banned from posting comments.'
+      }
+  }
+
+  const validatedFields = commentSchema.safeParse(formData.get('comment'));
+
+  if (!validatedFields.success) {
+    return { success: false, message: validatedFields.error.issues[0].message };
+  }
+
+  const newComment: Comment = {
+    id: crypto.randomUUID(),
+    text: validatedFields.data,
+    timestamp: new Date(),
+    anonHash: anonHash,
+    isAuthor: confession.anonHash === anonHash,
+  };
+
+  confession.comments.unshift(newComment);
+  revalidatePath('/');
+  return { success: true };
+}
+
+
+export async function reportConfession(confessionId: string) {
     const confession = confessions.find(c => c.id === confessionId);
-    const anonHash = cookies().get('anon_hash')?.value;
-
-    if (!confession || !anonHash) {
-        return { success: false, message: 'Could not add comment.' };
+    if (confession) {
+        if (confession.status === 'pending') {
+            return { success: false, message: 'This confession is already pending review.' };
+        }
+        confession.status = 'pending';
+        revalidatePath('/');
+        revalidatePath('/admin');
+        return { success: true, message: 'Confession reported for review.' };
     }
+    return { success: false, message: 'Confession not found.' };
+}
 
-    const validatedFields = commentSchema.safeParse(formData.get('comment'));
-    
-    if (!validatedFields.success) {
-        return { success: false, message: validatedFields.error.issues[0].message };
+export async function deleteConfession(confessionId: string) {
+    const index = confessions.findIndex(c => c.id === confessionId);
+    if (index > -1) {
+        confessions.splice(index, 1);
+        revalidatePath('/');
+        revalidatePath('/admin');
+        return { success: true, message: 'Confession deleted.' };
     }
+    return { success: false, message: 'Confession not found.' };
+}
 
-    const newComment: Comment = {
-        id: crypto.randomUUID(),
-        text: validatedFields.data,
-        timestamp: new Date(),
-        anonHash: anonHash,
-        isAuthor: confession.anonHash === anonHash,
+export async function banUser(anonHash: string) {
+    try {
+        await addBannedUser(anonHash);
+        revalidatePath('/admin');
+        return { success: true, message: `User ${anonHash.substring(0,6)}... has been banned.` };
+    } catch (e: any) {
+        return { success: false, message: e.message };
     }
-
-    confession.comments.unshift(newComment);
-    revalidatePath('/');
-    return { success: true };
 }

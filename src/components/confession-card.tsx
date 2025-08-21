@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { useState, useTransition, useRef } from 'react';
-import { handleLike, handleDislike, addComment } from '@/lib/actions';
+import { handleLike, handleDislike, addComment, reportConfession } from '@/lib/actions';
 import { Textarea } from './ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
@@ -46,6 +46,24 @@ export function ConfessionCard({ confession }: ConfessionCardProps) {
   const onDislike = () => {
     startTransition(async () => {
       await handleDislike(confession.id);
+    });
+  };
+
+  const onReport = () => {
+    startTransition(async () => {
+        const result = await reportConfession(confession.id);
+         if (result?.success) {
+            toast({
+                title: 'Reported',
+                description: result.message
+            });
+        } else if (result?.message) {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: result.message
+            });
+      }
     });
   };
 
@@ -125,6 +143,8 @@ export function ConfessionCard({ confession }: ConfessionCardProps) {
             size="sm"
             className="text-muted-foreground"
             aria-label="Report"
+            onClick={onReport}
+            disabled={isPending}
           >
             <Flag className="h-4 w-4 mr-2" />
             Report
