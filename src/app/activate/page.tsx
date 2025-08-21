@@ -3,7 +3,6 @@
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useEffect, useRef } from 'react';
-import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -17,8 +16,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { activateAccount } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
-import { AlertCircle, KeyRound, CheckCircle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, KeyRound } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -68,12 +67,7 @@ export default function ActivatePage() {
 
   useEffect(() => {
     if (!isPending && state.message) {
-      if (state.success) {
-        toast({
-          title: 'Success!',
-          description: state.message,
-        });
-      } else {
+      if (!state.success) {
         toast({
           variant: 'destructive',
           title: 'Activation Error',
@@ -82,25 +76,6 @@ export default function ActivatePage() {
       }
     }
   }, [state, isPending, toast]);
-
-  if (state.success) {
-    return (
-      <div className="container max-w-lg mx-auto py-12 px-4">
-        <Card>
-            <CardHeader className="items-center text-center">
-                <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
-                <CardTitle>Activation Successful!</CardTitle>
-                <CardDescription>{state.message}</CardDescription>
-            </CardHeader>
-            <CardFooter>
-                <Button asChild className="w-full">
-                    <Link href="/">Start Confessing</Link>
-                </Button>
-            </CardFooter>
-        </Card>
-      </div>
-    )
-  }
 
   return (
     <div className="container max-w-lg mx-auto py-12 px-4">
