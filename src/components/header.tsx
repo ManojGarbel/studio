@@ -29,7 +29,7 @@ const Header = () => {
   }, []);
 
   return (
-    <header className="bg-card border-b sticky top-0 z-10">
+    <header className="bg-card/80 border-b border-primary/20 backdrop-blur-lg sticky top-0 z-10">
       <div className="container max-w-2xl mx-auto flex items-center justify-between p-4">
         <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-primary">
           <Code2 className="h-7 w-7" />
@@ -38,13 +38,13 @@ const Header = () => {
           </h1>
         </Link>
         {isActivated && anonHash ? (
-          <div className="flex items-center gap-2 text-sm font-mono text-muted-foreground bg-secondary px-3 py-1.5 rounded-md">
-            <User className="h-4 w-4" />
+          <div className="flex items-center gap-2 text-sm font-mono text-muted-foreground bg-secondary px-3 py-1.5 rounded-md border border-primary/30">
+            <User className="h-4 w-4 text-primary" />
             <span>{anonHash.substring(0, 6)}...</span>
           </div>
         ) : (
           <Button asChild>
-            <Link href="/activate">Sign Up</Link>
+            <Link href="/activate">Activate Account</Link>
           </Button>
         )}
       </div>

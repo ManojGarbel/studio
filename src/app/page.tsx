@@ -58,13 +58,13 @@ export default function Home() {
         {activated ? (
           <ConfessionForm />
         ) : (
-          <div className="text-center bg-card border rounded-lg p-8">
-            <h2 className="text-xl font-semibold mb-2">Activate Your Account</h2>
+          <div className="text-center bg-card border border-primary/20 rounded-lg p-8 shadow-lg shadow-primary/10">
+            <h2 className="text-xl font-semibold mb-2 text-primary">Activate Your Account</h2>
             <p className="text-muted-foreground mb-4">
               Please activate your account to start sharing confessions.
             </p>
             <Button asChild>
-              <Link href="/activate">Activate Now</Link>
+              <Link href="/activate">Start Confessing</Link>
             </Button>
           </div>
         )}

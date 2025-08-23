@@ -85,16 +85,16 @@ export function ConfessionCard({ confession }: ConfessionCardProps) {
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center gap-4">
-        <Avatar>
-          <AvatarFallback>{confession.anonHash.substring(0, 1)}</AvatarFallback>
+        <Avatar className="border-2 border-primary/50">
+          <AvatarFallback className="bg-secondary">{confession.anonHash.substring(0, 1)}</AvatarFallback>
         </Avatar>
         <div className="flex flex-col">
-          <p className="font-semibold">Anonymous</p>
+          <p className="font-semibold text-primary">Anonymous</p>
           <p className="text-sm text-muted-foreground">{timeAgo}</p>
         </div>
       </CardHeader>
       <CardContent>
-        <pre className="whitespace-pre-wrap break-words font-code text-base">
+        <pre className="whitespace-pre-wrap break-words font-code text-base text-foreground/90">
           <code>{confession.text}</code>
         </pre>
       </CardContent>
@@ -107,11 +107,11 @@ export function ConfessionCard({ confession }: ConfessionCardProps) {
               aria-label="Like"
               onClick={onLike}
               disabled={isPending}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 hover:text-accent"
             >
               <Heart
                 className={`h-5 w-5 ${
-                  confession.likes > 0 ? 'text-red-500 fill-current' : 'text-muted-foreground'
+                  confession.likes > 0 ? 'text-accent fill-current' : 'text-muted-foreground'
                 }`}
               />
               <span>{confession.likes}</span>
@@ -122,7 +122,7 @@ export function ConfessionCard({ confession }: ConfessionCardProps) {
               aria-label="Dislike"
               onClick={onDislike}
               disabled={isPending}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 hover:text-red-500"
             >
               <ThumbsDown className="h-5 w-5 text-muted-foreground" />
               <span>{confession.dislikes}</span>
@@ -132,7 +132,7 @@ export function ConfessionCard({ confession }: ConfessionCardProps) {
               size="sm"
               aria-label="Comment"
               onClick={() => setShowComments(!showComments)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 hover:text-primary"
             >
               <MessageSquare className="h-5 w-5 text-muted-foreground" />
               <span>{confession.comments.length}</span>
@@ -141,7 +141,7 @@ export function ConfessionCard({ confession }: ConfessionCardProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground"
+            className="text-muted-foreground hover:text-destructive"
             aria-label="Report"
             onClick={onReport}
             disabled={isPending}
@@ -151,14 +151,14 @@ export function ConfessionCard({ confession }: ConfessionCardProps) {
           </Button>
         </div>
         {showComments && (
-          <div className="w-full pt-4 border-t">
+          <div className="w-full pt-4 border-t border-primary/20">
             <form action={handleCommentSubmit} ref={formRef} className="flex gap-2">
               <Textarea
                 name="comment"
                 placeholder="Add a comment..."
                 rows={1}
                 required
-                className="font-code flex-1"
+                className="font-code flex-1 bg-background"
               />
               <Button type="submit" size="icon" disabled={isPending}>
                 <Send className="h-4 w-4" />
@@ -167,14 +167,14 @@ export function ConfessionCard({ confession }: ConfessionCardProps) {
             <div className="mt-4 flex flex-col gap-4">
                 {confession.comments.map((comment) => (
                     <div key={comment.id} className="flex gap-3">
-                        <Avatar className="h-8 w-8">
-                            <AvatarFallback>{comment.anonHash.substring(0, 1)}</AvatarFallback>
+                        <Avatar className="h-8 w-8 border border-primary/30">
+                            <AvatarFallback className="bg-secondary text-xs">{comment.anonHash.substring(0, 1)}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                             <div className="flex items-center gap-2">
                                 <span className="font-semibold text-sm">
                                     {comment.isAuthor ? (
-                                        <Badge>Author</Badge>
+                                        <Badge variant="secondary" className="border border-accent/50 text-accent">Author</Badge>
                                     ) : (
                                         `Anon#${comment.anonHash.substring(0,4)}`
                                     )}
@@ -183,7 +183,7 @@ export function ConfessionCard({ confession }: ConfessionCardProps) {
                                     {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
                                 </span>
                             </div>
-                            <p className="text-sm mt-1">{comment.text}</p>
+                            <p className="text-sm mt-1 text-foreground/80">{comment.text}</p>
                         </div>
                     </div>
                 ))}
