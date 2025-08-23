@@ -169,7 +169,6 @@ export async function submitConfession(prevState: any, formData: FormData) {
   }
 
   try {
-    // Moderation is done before approval, but we can still check here
     const moderationResult = await moderateConfession({ text: confessionText });
     const supabase = createServiceRoleServerClient(cookieStore);
 
@@ -179,7 +178,7 @@ export async function submitConfession(prevState: any, formData: FormData) {
       text: confessionText,
       anon_hash: anonHash,
       status: initialStatus,
-    });
+    }).select();
 
     if (error) {
       console.error('Error submitting confession:', error);
@@ -219,6 +218,7 @@ export async function activateAccount(prevState: any, formData: FormData) {
     return {
       success: false,
       message: validatedFields.error.issues[0].message,
+      anonHash: null,
     };
   }
 
@@ -226,15 +226,12 @@ export async function activateAccount(prevState: any, formData: FormData) {
     return {
       success: false,
       message: 'Invalid activation key.',
+      anonHash: null,
     };
   }
 
   const anonHash = crypto.randomUUID();
-  const cookieStore = cookies();
   
-  // These cookies will be set on the client-side after this action succeeds
-  // to ensure the UI updates immediately.
-
   return {
     success: true,
     message: 'Account activated! You can now share your confessions.',
