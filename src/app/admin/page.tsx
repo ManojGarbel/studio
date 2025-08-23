@@ -39,8 +39,8 @@ export default async function AdminPage({
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+    <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <h1 className="text-3xl font-bold mb-6 text-center md:text-left">Admin Dashboard</h1>
 
       <div className="flex flex-col gap-6">
         {confessions.length > 0 ? (
@@ -49,9 +49,9 @@ export default async function AdminPage({
             return (
               <Card key={confession.id}>
                 <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg mb-1 flex items-center gap-2">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                    <div className='flex-1'>
+                      <CardTitle className="text-lg mb-1 flex items-center gap-2 flex-wrap">
                         <span>Confession #{confession.id.substring(0, 6)}</span>
                         {banned && <Badge variant="destructive">Banned</Badge>}
                       </CardTitle>
@@ -59,14 +59,14 @@ export default async function AdminPage({
                         {format(new Date(confession.timestamp), 'PPP p')}
                       </CardDescription>
                     </div>
-                    <Badge variant={getStatusVariant(confession.status)}>
+                    <Badge variant={getStatusVariant(confession.status)} className="self-start md:self-center">
                       {confession.status}
                     </Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <p className="font-code text-base">{confession.text}</p>
-                  <div className="text-sm text-muted-foreground mt-4 pt-4 border-t flex gap-4">
+                  <div className="text-sm text-muted-foreground mt-4 pt-4 border-t flex flex-wrap gap-4">
                     <span>Likes: {confession.likes}</span>
                     <span>Dislikes: {confession.dislikes}</span>
                     <span>Comments: {confession.comments.length}</span>

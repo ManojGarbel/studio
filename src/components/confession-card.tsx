@@ -23,6 +23,7 @@ import { handleLike, handleDislike, addComment, reportConfession } from '@/lib/a
 import { Textarea } from './ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
+import { TypeAnimation } from 'react-type-animation';
 
 interface ConfessionCardProps {
   confession: Confession;
@@ -94,12 +95,20 @@ export function ConfessionCard({ confession }: ConfessionCardProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <pre className="whitespace-pre-wrap break-words font-code text-base text-foreground/90">
-          <code>{confession.text}</code>
+         <pre className="whitespace-pre-wrap break-words font-code text-base text-foreground/90">
+          <code>
+            <TypeAnimation
+              sequence={[confession.text]}
+              wrapper="span"
+              speed={80}
+              cursor={true}
+              style={{ whiteSpace: 'pre-line' }}
+            />
+          </code>
         </pre>
       </CardContent>
       <CardFooter className="flex flex-col items-start gap-4">
-        <div className="flex justify-between items-center w-full">
+        <div className="flex flex-wrap justify-between items-center w-full gap-2">
           <div className="flex gap-1 items-center">
             <Button
               variant="ghost"
@@ -141,7 +150,7 @@ export function ConfessionCard({ confession }: ConfessionCardProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-destructive"
+            className="text-muted-foreground hover:text-destructive text-xs"
             aria-label="Report"
             onClick={onReport}
             disabled={isPending}
@@ -158,7 +167,7 @@ export function ConfessionCard({ confession }: ConfessionCardProps) {
                 placeholder="Add a comment..."
                 rows={1}
                 required
-                className="font-code flex-1 bg-background"
+                className="font-code flex-1 bg-background text-sm"
               />
               <Button type="submit" size="icon" disabled={isPending}>
                 <Send className="h-4 w-4" />
@@ -171,7 +180,7 @@ export function ConfessionCard({ confession }: ConfessionCardProps) {
                             <AvatarFallback className="bg-secondary text-xs">{comment.anonHash.substring(0, 1)}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-semibold text-sm">
                                     {comment.isAuthor ? (
                                         <Badge variant="secondary" className="border border-accent/50 text-accent">Author</Badge>

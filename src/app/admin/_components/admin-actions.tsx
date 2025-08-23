@@ -39,7 +39,7 @@ export default function AdminActions({
   };
 
   return (
-    <div className="flex justify-end gap-2 mt-4 border-t pt-4">
+    <div className="flex justify-end flex-wrap gap-2 mt-4 border-t pt-4">
       <Button
         variant="destructive"
         size="sm"
