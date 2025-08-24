@@ -1,17 +1,17 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Source_Code_Pro } from 'next/font/google';
+import { Roboto_Mono, Fira_Code } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/header';
 import Link from 'next/link';
 
-const fontBody = Inter({
+const fontBody = Roboto_Mono({
   subsets: ['latin'],
   variable: '--font-body',
 });
 
-const fontCode = Source_Code_Pro({
+const fontCode = Fira_Code({
   subsets: ['latin'],
   variable: '--font-code',
 });
