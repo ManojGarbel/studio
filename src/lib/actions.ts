@@ -194,10 +194,10 @@ export async function submitConfession(prevState: any, formData: FormData) {
     });
 
     if (error) {
-      console.error('Error submitting confession:', error);
+      console.error('Error submitting confession to database:', error);
       return {
         success: false,
-        message: 'Failed to submit confession to the database.',
+        message: 'Failed to submit confession. Database error.',
       };
     }
 
@@ -209,8 +209,8 @@ export async function submitConfession(prevState: any, formData: FormData) {
       message:
         'Your confession has been submitted and is pending review. Thank you.',
     };
-  } catch (error) {
-    console.error('Error during confession submission:', error);
+  } catch (error: any) {
+    console.error('Full error during confession submission:', error);
     return {
       success: false,
       message: 'An unexpected error occurred. Please try again later.',
