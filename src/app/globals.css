@@ -63,7 +63,7 @@ body {
 }
 
 @layer utilities {
-    @keyframes-aurora {
+    @keyframes keyframes-aurora {
         from {
             background-position: 50% 50%, 50% 50%
         }
