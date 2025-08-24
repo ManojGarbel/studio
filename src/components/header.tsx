@@ -87,56 +87,58 @@ const Header = () => {
                 href="/"
                 className="text-xl md:text-2xl font-bold text-primary"
               >
-                <h1 className="font-code tracking-tighter">
-                  <TypeAnimation
-                    sequence={[
-                        "Tell your secret before it logs out of your brain 🧠",
-                        2500,
-                        "Your secret is safe… unlike your search history 👀",
-                        2500,
-                        "Confess now, regret later",
-                        2500,
-                        "Anonymous wall, public vibes",
-                        2500,
-                        "Spill the tea ☕, no one knows it’s you",
-                        2500,
-                        "Secrets don’t age well, drop them here",
-                        2500,
-                        "This wall doesn’t judge… unlike your ex",
-                        2500,
-                        "Say it loud, your name stays muted 🔇",
-                        2500,
-                        "Confess today, laugh tomorrow",
-                        2500,
-                        "Post your secret, consider it encrypted 🔐",
-                        2500,
-                        "Don’t bottle it up, drop it like a meme",
-                        2500,
-                        "Your thoughts deserve a data dump 🖥️",
-                        2500,
-                        "Upload your guilt, we’ll host it safely",
-                        2500,
-                        "Spill your heart, not your IP address",
-                        2500,
-                        "Secrets here never get leaked… unless you screenshot",
-                        2500,
-                        "Confess like nobody’s watching (because nobody knows you)",
-                        2500,
-                        "Post your truth, the wall remembers but never tells",
-                        2500,
-                        "The wall is listening, the world isn’t",
-                        2500,
-                        "Confessions > Compressions. Don’t keep it zipped",
-                        2500,
-                        "Say it here, nowhere else",
-                        2500
-                    ]}
-                    wrapper="span"
-                    speed={50}
-                    repeat={Infinity}
-                    cursor={true}
-                  />
-                </h1>
+                <div className="h-[56px] md:h-auto flex items-center overflow-hidden">
+                    <h1 className="font-code tracking-tighter">
+                    <TypeAnimation
+                        sequence={[
+                            "Tell your secret before it logs out of your brain 🧠",
+                            2500,
+                            "Your secret is safe… unlike your search history 👀",
+                            2500,
+                            "Confess now, regret later",
+                            2500,
+                            "Anonymous wall, public vibes",
+                            2500,
+                            "Spill the tea ☕, no one knows it’s you",
+                            2500,
+                            "Secrets don’t age well, drop them here",
+                            2500,
+                            "This wall doesn’t judge… unlike your ex",
+                            2500,
+                            "Say it loud, your name stays muted 🔇",
+                            2500,
+                            "Confess today, laugh tomorrow",
+                            2500,
+                            "Post your secret, consider it encrypted 🔐",
+                            2500,
+                            "Don’t bottle it up, drop it like a meme",
+                            2500,
+                            "Your thoughts deserve a data dump 🖥️",
+                            2500,
+                            "Upload your guilt, we’ll host it safely",
+                            2500,
+                            "Spill your heart, not your IP address",
+                            2500,
+                            "Secrets here never get leaked… unless you screenshot",
+                            2500,
+                            "Confess like nobody’s watching (because nobody knows you)",
+                            2500,
+                            "Post your truth, the wall remembers but never tells",
+                            2500,
+                            "The wall is listening, the world isn’t",
+                            2500,
+                            "Confessions > Compressions. Don’t keep it zipped",
+                            2500,
+                            "Say it here, nowhere else",
+                            2500
+                        ]}
+                        wrapper="span"
+                        speed={50}
+                        repeat={Infinity}
+                        cursor={true}
+                    />
+                    </h1>
+                </div>
               </Link>
           </div>
           <div className="flex items-center gap-2">
