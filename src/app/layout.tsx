@@ -1,17 +1,17 @@
 import type { Metadata, Viewport } from 'next';
-import { Roboto_Mono, Fira_Code } from 'next/font/google';
+import { Inter, Source_Code_Pro } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/header';
 import Link from 'next/link';
 
-const fontBody = Roboto_Mono({
+const fontBody = Inter({
   subsets: ['latin'],
   variable: '--font-body',
 });
 
-const fontCode = Fira_Code({
+const fontCode = Source_Code_Pro({
   subsets: ['latin'],
   variable: '--font-code',
 });
@@ -36,7 +36,7 @@ export default function RootLayout({
     <html lang="en" className="h-full dark">
       <body
         className={cn(
-          'relative h-full antialiased font-code stars-bg',
+          'relative h-full antialiased stars-bg font-body',
           fontBody.variable,
           fontCode.variable
         )}

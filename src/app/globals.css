@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-  font-family: var(--font-code), monospace;
+  font-family: var(--font-body), sans-serif;
 }
 
 @layer base {
@@ -67,7 +67,7 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-code;
+    @apply bg-background text-foreground font-body;
     text-shadow: 0 0 2px hsl(var(--primary) / 0.1);
   }
 }
