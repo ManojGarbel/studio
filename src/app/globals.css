@@ -59,7 +59,35 @@ body {
   }
   body {
     @apply bg-background text-foreground;
-    background-image: radial-gradient(hsl(var(--foreground)) 0.5px, transparent 0.5px);
-    background-size: 15px 15px;
   }
+}
+
+@layer utilities {
+    @keyframes-aurora {
+        from {
+            background-position: 50% 50%, 50% 50%
+        }
+        to {
+            background-position: 350% 50%, 350% 50%
+        }
+    }
+    .aurora-bg {
+        position: relative;
+        overflow: hidden;
+    }
+    .aurora-bg::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: -1;
+        background-image:
+            radial-gradient(ellipse at 25% 0%, hsl(var(--primary) / 0.15), transparent 50%),
+            radial-gradient(ellipse at 75% 100%, hsl(var(--accent) / 0.15), transparent 50%);
+        background-size: 500% 500%;
+        animation: keyframes-aurora 20s infinite linear;
+        will-change: background-position;
+    }
 }

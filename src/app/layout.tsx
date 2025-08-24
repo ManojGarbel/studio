@@ -36,7 +36,7 @@ export default function RootLayout({
     <html lang="en" className="h-full dark">
       <body
         className={cn(
-          'relative h-full antialiased font-code',
+          'relative h-full antialiased font-code aurora-bg',
           fontBody.variable,
           fontCode.variable
         )}
