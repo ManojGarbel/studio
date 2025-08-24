@@ -3,11 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import type { Confession } from './types';
-import { moderateConfession } from '@/ai/flows/moderate-confession';
-import {
-  createServerClient,
-  createServiceRoleServerClient,
-} from './supabase/server';
+import { createServiceRoleServerClient } from './supabase/server';
 import { cookies, headers } from 'next/headers';
 import { PII_REGEX } from './utils';
 import { isUserBanned, getLastPostTime } from './db';
@@ -16,7 +12,7 @@ const TEN_MINUTES = 10 * 60 * 1000;
 
 export async function getConfessions(): Promise<Confession[]> {
   const cookieStore = cookies();
-  const supabase = createServerClient(cookieStore);
+  const supabase = createServiceRoleServerClient(cookieStore);
   const { data, error } = await supabase
     .from('confessions')
     .select(
@@ -149,13 +145,14 @@ export async function submitConfession(prevState: any, formData: FormData) {
 
   const lastPostTime = await getLastPostTime(anonHash);
   if (lastPostTime && Date.now() - lastPostTime.getTime() < TEN_MINUTES) {
-      const remainingTime = Math.ceil((TEN_MINUTES - (Date.now() - lastPostTime.getTime())) / 60000);
-      return {
-          success: false,
-          message: `You must wait ${remainingTime} more minute(s) to post again.`
-      }
+    const remainingTime = Math.ceil(
+      (TEN_MINUTES - (Date.now() - lastPostTime.getTime())) / 60000
+    );
+    return {
+      success: false,
+      message: `You must wait ${remainingTime} more minute(s) to post again.`,
+    };
   }
-
 
   const rawConfession = formData.get('confession');
   const validatedFields = confessionSchema.safeParse(rawConfession);
@@ -182,15 +179,12 @@ export async function submitConfession(prevState: any, formData: FormData) {
   }
 
   try {
-    const moderationResult = await moderateConfession({ text: confessionText });
     const supabase = createServiceRoleServerClient(cookieStore);
-
-    const initialStatus = moderationResult.isToxic ? 'rejected' : 'pending';
 
     const { error } = await supabase.from('confessions').insert({
       text: confessionText,
       anon_hash: anonHash,
-      status: initialStatus,
+      status: 'approved', // Directly approve the confession
     });
 
     if (error) {
@@ -206,8 +200,7 @@ export async function submitConfession(prevState: any, formData: FormData) {
 
     return {
       success: true,
-      message:
-        'Your confession has been submitted and is pending review. Thank you.',
+      message: 'Your confession has been submitted and is now public. Thank you.',
     };
   } catch (error: any) {
     console.error('Full error during confession submission:', error);
@@ -245,42 +238,42 @@ export async function activateAccount(prevState: any, formData: FormData) {
       anonHash: null,
     };
   }
-  
+
   const ip = headerStore.get('x-forwarded-for')?.split(',')[0].trim();
   const userAgent = headerStore.get('user-agent');
-  
+
   // Check if IP already activated
-  if(ip) {
-      const { data: existingActivation, error: ipError } = await supabase
-        .from('activations')
-        .select('id')
-        .eq('ip_address', ip)
-        .single();
-        
-      if (existingActivation) {
-          return {
-              success: false,
-              message: "This IP address has already been used to activate an account.",
-              anonHash: null,
-          }
-      }
+  if (ip) {
+    const { data: existingActivation, error: ipError } = await supabase
+      .from('activations')
+      .select('id')
+      .eq('ip_address', ip)
+      .single();
+
+    if (existingActivation) {
+      return {
+        success: false,
+        message: 'This IP address has already been used to activate an account.',
+        anonHash: null,
+      };
+    }
   }
 
   const anonHash = crypto.randomUUID();
 
   const { error: insertError } = await supabase.from('activations').insert({
-      anon_hash: anonHash,
-      ip_address: ip,
-      user_agent: userAgent,
+    anon_hash: anonHash,
+    ip_address: ip,
+    user_agent: userAgent,
   });
 
   if (insertError) {
-      console.error('Error saving activation:', insertError);
-      return {
-          success: false,
-          message: 'Could not save activation details. Please try again.',
-          anonHash: null,
-      }
+    console.error('Error saving activation:', insertError);
+    return {
+      success: false,
+      message: 'Could not save activation details. Please try again.',
+      anonHash: null,
+    };
   }
 
   return {
@@ -444,3 +437,5 @@ export async function banUser(anonHash: string) {
     message: `User ${anonHash.substring(0, 6)}... has been banned.`,
   };
 }
+
+    
