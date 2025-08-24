@@ -90,18 +90,22 @@ const Header = () => {
                 <h1 className="font-code tracking-tighter">
                   <TypeAnimation
                     sequence={[
-                      'Share your secret...',
-                      2000,
-                      'Apna raaz batao.',
-                      2000,
-                      'Tomar golpo bolo.',
-                      2000,
-                      'Your code is safe.',
-                      2000,
-                      'Sab kuch keh do.',
-                      2000,
-                      'Moner kotha bolo.',
-                      2000
+                      'Bhai, code mein kya likha hai?',
+                      2500,
+                      'Ctrl+Z for your code sins.',
+                      2500,
+                      'Push maar, darr mat.',
+                      2500,
+                      'Coding ke Moye Moye moments.',
+                      2500,
+                      'Beta, tumse na ho payega?',
+                      2500,
+                      'Shobai-ke moner kotha bolo.',
+                      2500,
+                      'Arey, kehna kya chahte ho?',
+                      2500,
+                      'Your code is safe here.',
+                      2500
                     ]}
                     wrapper="span"
                     speed={50}
