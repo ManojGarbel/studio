@@ -15,4 +15,6 @@ export type Confession = {
   likes: number;
   dislikes: number;
   comments: Comment[];
+  // Add a field to track the current user's interaction
+  userInteraction?: 'like' | 'dislike' | null;
 };

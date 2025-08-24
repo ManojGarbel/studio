@@ -14,6 +14,8 @@ const TEN_MINUTES = 10 * 60 * 1000;
 export async function getConfessions(): Promise<Confession[]> {
   const cookieStore = cookies();
   const supabase = createServiceRoleServerClient(cookieStore);
+  const anonHash = cookieStore.get('anon_hash')?.value;
+
   const { data, error } = await supabase
     .from('confessions')
     .select(
@@ -25,10 +27,12 @@ export async function getConfessions(): Promise<Confession[]> {
       status,
       likes,
       dislikes,
-      comments ( id, text, created_at, anon_hash, is_author )
+      comments ( id, text, created_at, anon_hash, is_author ),
+      post_interactions ( interaction_type )
     `
     )
     .eq('status', 'approved')
+    .eq('post_interactions.user_anon_hash', anonHash) // Filter interactions by the current user
     .order('created_at', { ascending: false })
     .order('created_at', { foreignTable: 'comments', ascending: true });
 
@@ -53,6 +57,8 @@ export async function getConfessions(): Promise<Confession[]> {
       anonHash: c.anon_hash,
       isAuthor: c.is_author,
     })),
+    // Determine the user's interaction from the filtered query result
+    userInteraction: item.post_interactions.length > 0 ? item.post_interactions[0].interaction_type : null
   }));
 }
 
@@ -283,28 +289,97 @@ export async function activateAccount(prevState: any, formData: FormData) {
   };
 }
 
-export async function handleLike(confessionId: string) {
+async function handleInteraction(
+  confessionId: string,
+  interactionType: 'like' | 'dislike'
+) {
   const cookieStore = cookies();
   const supabase = createServiceRoleServerClient(cookieStore);
-  const { error } = await supabase.rpc('increment_like', {
-    row_id: confessionId,
-  });
-  if (error) {
-    console.error('Error liking post', error);
+  const anonHash = cookieStore.get('anon_hash')?.value;
+
+  if (!anonHash) {
+    return { success: false, message: 'User not authenticated.' };
   }
+
+  // 1. Check for existing interaction by this user on this post
+  const { data: existingInteraction, error: fetchError } = await supabase
+    .from('post_interactions')
+    .select('*')
+    .eq('confession_id', confessionId)
+    .eq('user_anon_hash', anonHash)
+    .single();
+
+  if (fetchError && fetchError.code !== 'PGRST116') {
+    // PGRST116 means no rows found, which is fine.
+    console.error('Error fetching interaction:', fetchError);
+    return { success: false, message: 'Database error.' };
+  }
+
+  const trx = supabase.rpc; // Using rpc for transaction-like behavior
+
+  if (existingInteraction) {
+    // 2. User is changing or removing their interaction
+    const { error: deleteError } = await supabase
+      .from('post_interactions')
+      .delete()
+      .eq('id', existingInteraction.id);
+
+    if (deleteError) {
+        console.error('Error deleting interaction:', deleteError);
+        return { success: false, message: 'Database error.' };
+    }
+
+    // Decrement the old count
+    const decrementColumn = existingInteraction.interaction_type === 'like' ? 'likes' : 'dislikes';
+    await supabase.rpc('decrement_count', { row_id: confessionId, column_name: decrementColumn });
+
+    if (existingInteraction.interaction_type !== interactionType) {
+      // 2a. User is switching from like to dislike, or vice-versa
+      const { error: insertError } = await supabase
+        .from('post_interactions')
+        .insert({
+          confession_id: confessionId,
+          user_anon_hash: anonHash,
+          interaction_type: interactionType,
+        });
+       if (insertError) {
+            console.error('Error inserting new interaction:', insertError);
+            return { success: false, message: 'Database error.' };
+       }
+       // Increment the new count
+       const incrementColumn = interactionType === 'like' ? 'likes' : 'dislikes';
+       await supabase.rpc('increment_count', { row_id: confessionId, column_name: incrementColumn });
+    }
+    // 2b. If it was the same interaction type, we've already deleted it, so it's just an "undo".
+  } else {
+    // 3. User is adding a new interaction
+    const { error: insertError } = await supabase
+      .from('post_interactions')
+      .insert({
+        confession_id: confessionId,
+        user_anon_hash: anonHash,
+        interaction_type: interactionType,
+      });
+    if (insertError) {
+        console.error('Error inserting new interaction:', insertError);
+        return { success: false, message: 'Database error.' };
+    }
+    // Increment the count
+    const incrementColumn = interactionType === 'like' ? 'likes' : 'dislikes';
+    await supabase.rpc('increment_count', { row_id: confessionId, column_name: incrementColumn });
+  }
+
   revalidatePath('/');
+  return { success: true };
+}
+
+
+export async function handleLike(confessionId: string) {
+    return handleInteraction(confessionId, 'like');
 }
 
 export async function handleDislike(confessionId: string) {
-  const cookieStore = cookies();
-  const supabase = createServiceRoleServerClient(cookieStore);
-  const { error } = await supabase.rpc('increment_dislike', {
-    row_id: confessionId,
-  });
-  if (error) {
-    console.error('Error disliking post', error);
-  }
-  revalidatePath('/');
+    return handleInteraction(confessionId, 'dislike');
 }
 
 const commentSchema = z
@@ -366,40 +441,43 @@ export async function addComment(confessionId: string, formData: FormData) {
   return { success: true };
 }
 
-export async function reportConfession(confessionId: string) {
+async function handleReport(contentId: string, contentType: 'confession' | 'comment') {
   const cookieStore = cookies();
   const supabase = createServiceRoleServerClient(cookieStore);
+  const anonHash = cookieStore.get('anon_hash')?.value;
 
-  const { data: confession, error: fetchError } = await supabase
-    .from('confessions')
-    .select('status')
-    .eq('id', confessionId)
-    .single();
-
-  if (fetchError || !confession) {
-    return { success: false, message: 'Confession not found.' };
+  if (!anonHash) {
+    return { success: false, message: 'You must be logged in to report content.' };
   }
 
-  if (confession.status === 'pending') {
-    return {
-      success: false,
-      message: 'This confession is already pending review.',
-    };
-  }
-
-  const { error } = await supabase
-    .from('confessions')
-    .update({ status: 'pending' })
-    .eq('id', confessionId);
+  const { error } = await supabase.from('reports').insert({
+    content_id: contentId,
+    content_type: contentType,
+    reporter_anon_hash: anonHash,
+    status: 'pending',
+  });
 
   if (error) {
-    return { success: false, message: 'Failed to report confession.' };
+    if (error.code === '23505') { // unique_violation
+      return { success: false, message: 'You have already reported this content.' };
+    }
+    console.error(`Error reporting ${contentType}:`, error);
+    return { success: false, message: `Failed to report ${contentType}.` };
   }
 
   revalidatePath('/');
   revalidatePath('/admin');
-  return { success: true, message: 'Confession reported for review.' };
+  return { success: true, message: 'Content reported for review.' };
 }
+
+export async function reportConfession(confessionId: string) {
+    return handleReport(confessionId, 'confession');
+}
+
+export async function reportComment(commentId: string) {
+    return handleReport(commentId, 'comment');
+}
+
 
 export async function deleteConfession(confessionId: string) {
   const cookieStore = cookies();
@@ -414,6 +492,21 @@ export async function deleteConfession(confessionId: string) {
   revalidatePath('/');
   revalidatePath('/admin');
   return { success: true, message: 'Confession deleted.' };
+}
+
+export async function deleteComment(commentId: string) {
+  const cookieStore = cookies();
+  const supabase = createServiceRoleServerClient(cookieStore);
+  const { error } = await supabase
+    .from('comments')
+    .delete()
+    .eq('id', commentId);
+  if (error) {
+    return { success: false, message: 'Failed to delete comment.' };
+  }
+  revalidatePath('/');
+  revalidatePath('/admin');
+  return { success: true, message: 'Comment deleted.' };
 }
 
 export async function banUser(anonHash: string) {
