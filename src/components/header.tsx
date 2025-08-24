@@ -78,7 +78,7 @@ const Header = () => {
   return (
     <>
       <header className="bg-background/80 border-b border-primary/30 backdrop-blur-sm sticky top-0 z-10 shadow-lg shadow-primary/10">
-        <div className="container max-w-2xl mx-auto flex items-center justify-between p-4">
+        <div className="container max-w-2xl mx-auto flex items-center justify-between p-4 min-h-[92px] md:min-h-0">
           <div className="flex items-center gap-3">
               <div onClick={handleLogoClick} className="cursor-pointer" title="ConfessCode">
                  <Code2 className="h-8 w-8 md:h-10 md:w-10 text-primary animate-pulse" />
