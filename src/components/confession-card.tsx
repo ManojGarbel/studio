@@ -216,7 +216,7 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full group">
       <CardHeader className="flex flex-row items-start gap-4">
         <Avatar className="border-2 border-primary/50 mt-1">
            <AvatarFallback className="bg-secondary">

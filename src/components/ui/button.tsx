@@ -5,18 +5,18 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 shadow-[0_0_10px_theme(colors.primary)] hover:shadow-[0_0_20px_theme(colors.primary)]",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-95 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 shadow-[0_0_10px_theme(colors.primary/50%)] hover:shadow-[0_0_20px_theme(colors.primary/75%)] hover:bg-primary/90",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default: "bg-primary text-primary-foreground",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-[0_0_10px_theme(colors.destructive)] hover:shadow-[0_0_20px_theme(colors.destructive)]",
+          "bg-destructive text-destructive-foreground shadow-[0_0_10px_theme(colors.destructive/50%)] hover:shadow-[0_0_20px_theme(colors.destructive/75%)] hover:bg-destructive/90",
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground shadow-[0_0_10px_theme(colors.accent)] hover:shadow-[0_0_20px_theme(colors.accent)]",
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground shadow-[0_0_10px_theme(colors.accent/50%)] hover:shadow-[0_0_20px_theme(colors.accent/75%)]",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground shadow-none hover:shadow-[0_0_20px_theme(colors.accent)]",
+        ghost: "hover:bg-accent hover:text-accent-foreground shadow-none hover:shadow-[0_0_20px_theme(colors.accent/50%)]",
         link: "text-primary underline-offset-4 hover:underline shadow-none",
       },
       size: {
