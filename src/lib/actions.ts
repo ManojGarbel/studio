@@ -7,6 +7,7 @@ import { createServiceRoleServerClient } from './supabase/server';
 import { cookies, headers } from 'next/headers';
 import { PII_REGEX } from './utils';
 import { isUserBanned, getLastPostTime } from './db';
+import { moderateConfession } from '@/ai/flows/moderate-confession';
 
 const TEN_MINUTES = 10 * 60 * 1000;
 
@@ -184,7 +185,7 @@ export async function submitConfession(prevState: any, formData: FormData) {
     const { error } = await supabase.from('confessions').insert({
       text: confessionText,
       anon_hash: anonHash,
-      status: 'approved', // Directly approve the confession
+      status: 'pending', // Set status to 'pending' for admin review
     });
 
     if (error) {
@@ -195,12 +196,11 @@ export async function submitConfession(prevState: any, formData: FormData) {
       };
     }
 
-    revalidatePath('/');
     revalidatePath('/admin');
 
     return {
       success: true,
-      message: 'Your confession has been submitted and is now public. Thank you.',
+      message: 'Your confession has been submitted for review. Thank you.',
     };
   } catch (error: any) {
     console.error('Full error during confession submission:', error);
@@ -437,5 +437,3 @@ export async function banUser(anonHash: string) {
     message: `User ${anonHash.substring(0, 6)}... has been banned.`,
   };
 }
-
-    
