@@ -7,11 +7,14 @@ import { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { TypeAnimation } from 'react-type-animation';
 import InfoDialog from './info-dialog';
+import { useRouter } from 'next/navigation';
 
 const Header = () => {
   const [isActivated, setIsActivated] = useState(false);
   const [anonHash, setAnonHash] = useState<string | undefined>(undefined);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [logoClickCount, setLogoClickCount] = useState(0);
+  const router = useRouter();
 
   useEffect(() => {
     const checkActivation = () => {
@@ -27,33 +30,57 @@ const Header = () => {
     const interval = setInterval(checkActivation, 500);
     return () => clearInterval(interval);
   }, []);
+  
+  useEffect(() => {
+    if (logoClickCount === 5) {
+      router.push('/admin/login');
+      setLogoClickCount(0); // Reset count
+    }
+
+    const timer = setTimeout(() => {
+      if (logoClickCount > 0) {
+        setLogoClickCount(0);
+      }
+    }, 1500); // Reset count after 1.5 seconds of inactivity
+
+    return () => clearTimeout(timer);
+  }, [logoClickCount, router]);
+
+  const handleLogoClick = () => {
+    setLogoClickCount((prevCount) => prevCount + 1);
+  };
+
 
   return (
     <>
       <header className="bg-background/80 border-b border-primary/30 backdrop-blur-sm sticky top-0 z-10 shadow-lg shadow-primary/10">
         <div className="container max-w-2xl mx-auto flex items-center justify-between p-4">
-          <Link
-            href="/"
-            className="flex items-center gap-3 text-xl md:text-2xl font-bold text-primary"
-          >
-            <Code2 className="h-8 w-8 md:h-10 md:w-10 animate-pulse" />
-            <h1 className="font-code tracking-tighter">
-              <TypeAnimation
-                sequence={[
-                  './run <ConfessCode/>',
-                  2000,
-                  'cat /var/log/anonymous.log',
-                  2000,
-                  'git blame --guilt',
-                  2000,
-                ]}
-                wrapper="span"
-                speed={50}
-                repeat={Infinity}
-                cursor={true}
-              />
-            </h1>
-          </Link>
+          <div className="flex items-center gap-3">
+              <div onClick={handleLogoClick} className="cursor-pointer" title="ConfessCode">
+                 <Code2 className="h-8 w-8 md:h-10 md:w-10 text-primary animate-pulse" />
+              </div>
+              <Link
+                href="/"
+                className="text-xl md:text-2xl font-bold text-primary"
+              >
+                <h1 className="font-code tracking-tighter">
+                  <TypeAnimation
+                    sequence={[
+                      './run <ConfessCode/>',
+                      2000,
+                      'cat /var/log/anonymous.log',
+                      2000,
+                      'git blame --guilt',
+                      2000,
+                    ]}
+                    wrapper="span"
+                    speed={50}
+                    repeat={Infinity}
+                    cursor={true}
+                  />
+                </h1>
+              </Link>
+          </div>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
