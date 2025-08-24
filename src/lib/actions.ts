@@ -11,11 +11,15 @@ import { redirect } from 'next/navigation';
 
 const TEN_MINUTES = 10 * 60 * 1000;
 
+
+// This function now handles all visibility logic internally.
+// It fetches a broader set of data and filters it according to the rules.
 export async function getConfessions(): Promise<Confession[]> {
   const cookieStore = cookies();
   const supabase = createServiceRoleServerClient(cookieStore);
   const anonHash = cookieStore.get('anon_hash')?.value;
 
+  // Fetches all approved confessions AND all posts by the current user (if any)
   let query = supabase
     .from('confessions')
     .select(
@@ -33,20 +37,17 @@ export async function getConfessions(): Promise<Confession[]> {
     )
     .order('created_at', { ascending: false })
     .order('created_at', { foreignTable: 'comments', ascending: true });
-
-  // If the user is logged in, show their own posts regardless of status.
-  // Otherwise, only show approved posts.
+    
   if (anonHash) {
-    query = query.or(`status.eq.approved,and(status.in.("pending","rejected"),anon_hash.eq.${anonHash})`);
+    query = query.or(`status.eq.approved,anon_hash.eq.${anonHash}`);
   } else {
     query = query.eq('status', 'approved');
   }
 
   const { data, error } = await query;
 
-
   if (error) {
-    console.error('Error fetching confessions:', error);
+    console.error('Error fetching confessions:', error.message);
     return [];
   }
 

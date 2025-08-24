@@ -40,15 +40,15 @@ export default function Home() {
 
     fetchConfessionsAndStatus();
     
-    // Set up an interval to check for cookie changes
-    // This ensures the page updates if activation happens in another tab
+    // Set up an interval to check for cookie changes and fetch new confessions
+    // This provides a basic real-time feel
     const interval = setInterval(() => {
       const isActivated = Cookies.get('is_activated') === 'true';
       if (isActivated !== activated) {
         setActivated(isActivated);
-        // We don't need to reload, React state change will handle the UI update
       }
-    }, 1000);
+      fetchConfessionsAndStatus();
+    }, 5000); // Refresh every 5 seconds
 
     return () => clearInterval(interval);
 
