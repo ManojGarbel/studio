@@ -8,7 +8,7 @@ import {
   createServerClient,
   createServiceRoleServerClient,
 } from './supabase/server';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { PII_REGEX } from './utils';
 import { isUserBanned, getLastPostTime } from './db';
 
@@ -194,7 +194,7 @@ export async function submitConfession(prevState: any, formData: FormData) {
     });
 
     if (error) {
-      console.error('Error submitting confession to database:', error);
+      console.error('Full error during confession submission:', error);
       return {
         success: false,
         message: 'Failed to submit confession. Database error.',
@@ -213,7 +213,7 @@ export async function submitConfession(prevState: any, formData: FormData) {
     console.error('Full error during confession submission:', error);
     return {
       success: false,
-      message: 'An unexpected error occurred. Please try again later.',
+      message: `An unexpected error occurred: ${error.message || 'Unknown error'}. Please try again later.`,
     };
   }
 }
@@ -223,6 +223,10 @@ const activationSchema = z
   .min(1, { message: 'Activation key is required.' });
 
 export async function activateAccount(prevState: any, formData: FormData) {
+  const cookieStore = cookies();
+  const supabase = createServiceRoleServerClient(cookieStore);
+  const headerStore = headers();
+
   const rawActivationKey = formData.get('activationKey');
   const validatedFields = activationSchema.safeParse(rawActivationKey);
 
@@ -241,8 +245,43 @@ export async function activateAccount(prevState: any, formData: FormData) {
       anonHash: null,
     };
   }
+  
+  const ip = headerStore.get('x-forwarded-for')?.split(',')[0].trim();
+  const userAgent = headerStore.get('user-agent');
+  
+  // Check if IP already activated
+  if(ip) {
+      const { data: existingActivation, error: ipError } = await supabase
+        .from('activations')
+        .select('id')
+        .eq('ip_address', ip)
+        .single();
+        
+      if (existingActivation) {
+          return {
+              success: false,
+              message: "This IP address has already been used to activate an account.",
+              anonHash: null,
+          }
+      }
+  }
 
   const anonHash = crypto.randomUUID();
+
+  const { error: insertError } = await supabase.from('activations').insert({
+      anon_hash: anonHash,
+      ip_address: ip,
+      user_agent: userAgent,
+  });
+
+  if (insertError) {
+      console.error('Error saving activation:', insertError);
+      return {
+          success: false,
+          message: 'Could not save activation details. Please try again.',
+          anonHash: null,
+      }
+  }
 
   return {
     success: true,
