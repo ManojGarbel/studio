@@ -31,7 +31,6 @@ export async function getConfessions(): Promise<Confession[]> {
       post_interactions ( interaction_type )
     `
     )
-    .eq('status', 'approved')
     .eq('post_interactions.user_anon_hash', anonHash) // Filter interactions by the current user
     .order('created_at', { ascending: false })
     .order('created_at', { foreignTable: 'comments', ascending: true });
@@ -191,7 +190,7 @@ export async function submitConfession(prevState: any, formData: FormData) {
     const { error } = await supabase.from('confessions').insert({
       text: confessionText,
       anon_hash: anonHash,
-      status: 'pending', // Set status to 'pending' for admin review
+      status: 'approved', // Set status to 'approved' by default
     });
 
     if (error) {
@@ -202,11 +201,11 @@ export async function submitConfession(prevState: any, formData: FormData) {
       };
     }
 
-    revalidatePath('/admin');
+    revalidatePath('/');
 
     return {
       success: true,
-      message: 'Your confession has been submitted for review. Thank you.',
+      message: 'Your confession has been posted. Thank you.',
     };
   } catch (error: any) {
     console.error('Full error during confession submission:', error);
@@ -330,8 +329,12 @@ async function handleInteraction(
     }
 
     // Decrement the old count
-    const decrementColumn = existingInteraction.interaction_type === 'like' ? 'likes' : 'dislikes';
-    await supabase.rpc('decrement_count', { row_id: confessionId, column_name: decrementColumn });
+    if (existingInteraction.interaction_type === 'like') {
+        await supabase.rpc('decrement_count', { row_id: confessionId, column_name: 'likes' });
+    } else {
+        await supabase.rpc('decrement_count', { row_id: confessionId, column_name: 'dislikes' });
+    }
+    
 
     if (existingInteraction.interaction_type !== interactionType) {
       // 2a. User is switching from like to dislike, or vice-versa
@@ -347,8 +350,11 @@ async function handleInteraction(
             return { success: false, message: 'Database error.' };
        }
        // Increment the new count
-       const incrementColumn = interactionType === 'like' ? 'likes' : 'dislikes';
-       await supabase.rpc('increment_count', { row_id: confessionId, column_name: incrementColumn });
+        if (interactionType === 'like') {
+            await supabase.rpc('increment_count', { row_id: confessionId, column_name: 'likes' });
+        } else {
+            await supabase.rpc('increment_count', { row_id: confessionId, column_name: 'dislikes' });
+        }
     }
     // 2b. If it was the same interaction type, we've already deleted it, so it's just an "undo".
   } else {
@@ -365,8 +371,11 @@ async function handleInteraction(
         return { success: false, message: 'Database error.' };
     }
     // Increment the count
-    const incrementColumn = interactionType === 'like' ? 'likes' : 'dislikes';
-    await supabase.rpc('increment_count', { row_id: confessionId, column_name: incrementColumn });
+    if (interactionType === 'like') {
+        await supabase.rpc('increment_count', { row_id: confessionId, column_name: 'likes' });
+    } else {
+        await supabase.rpc('increment_count', { row_id: confessionId, column_name: 'dislikes' });
+    }
   }
 
   revalidatePath('/');
@@ -570,3 +579,5 @@ export async function signOutAdmin() {
   cookieStore.delete('admin-auth');
   redirect('/admin/login');
 }
+
+    

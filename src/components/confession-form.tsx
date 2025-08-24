@@ -89,7 +89,7 @@ export default function ConfessionForm() {
         <CardHeader>
           <CardTitle>Share Your Secret</CardTitle>
           <CardDescription>
-            Post your anonymous confession. It will be reviewed by an admin before it's published.
+            Post your anonymous confession. It will be live for everyone to see.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -111,3 +111,5 @@ export default function ConfessionForm() {
     </Card>
   );
 }
+
+    

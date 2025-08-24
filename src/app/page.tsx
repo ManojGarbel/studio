@@ -88,8 +88,7 @@ export default function Home() {
               ))
             ) : (
               <div className="text-center text-muted-foreground py-12">
-                <p>No confessions yet.</p>
-                <p>Once confessions are approved by an admin, they will appear here.</p>
+                <p>No confessions yet. Be the first to share one!</p>
               </div>
             )}
           </div>
@@ -98,3 +97,5 @@ export default function Home() {
     </>
   );
 }
+
+    
