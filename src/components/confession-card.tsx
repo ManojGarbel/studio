@@ -15,10 +15,11 @@ import {
   Flag,
   ThumbsDown,
   Send,
+  User,
   UserX,
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from './ui/avatar';
-import { useState, useTransition, useRef, useEffect } from 'react';
+import { useState, useTransition, useRef, useEffect, useMemo } from 'react';
 import {
   handleLike,
   handleDislike,
@@ -30,7 +31,6 @@ import { Textarea } from './ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
 import { TypeAnimation } from 'react-type-animation';
-import { anonCreateColor } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +44,12 @@ interface ConfessionCardProps {
   confession: Confession;
 }
 
+const COMMENT_COLOR_PALETTE = [
+  '#FF6B6B', '#4ECDC4', '#45B7D1', '#FED766', '#8A63D2',
+  '#F7786B', '#A2D4AB', '#F9A828', '#2AB7CA', '#F56991'
+];
+
+
 export function ConfessionCard({ confession: initialConfession }: ConfessionCardProps) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
@@ -51,6 +57,25 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
   const formRef = useRef<HTMLFormElement>(null);
   
   const [confession, setConfession] = useState(initialConfession);
+
+  const commentColorMap = useMemo(() => {
+    const map = new Map<string, string>();
+    const availableColors = [...COMMENT_COLOR_PALETTE];
+
+    confession.comments.forEach(comment => {
+      if (!map.has(comment.anonHash)) {
+        if (availableColors.length > 0) {
+          const colorIndex = Math.floor(Math.random() * availableColors.length);
+          map.set(comment.anonHash, availableColors[colorIndex]);
+          availableColors.splice(colorIndex, 1);
+        } else {
+          // Fallback if more commenters than colors
+          map.set(comment.anonHash, COMMENT_COLOR_PALETTE[Math.floor(Math.random() * COMMENT_COLOR_PALETTE.length)]);
+        }
+      }
+    });
+    return map;
+  }, [confession.comments]);
   
   // Re-sync with server-provided props if they change
   useEffect(() => {
@@ -258,8 +283,8 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
               {confession.comments.map((comment) => (
                 <div key={comment.id} className="flex gap-3 group">
                   <Avatar className="h-8 w-8 border border-primary/30">
-                    <AvatarFallback className="bg-secondary text-xs">
-                       <UserX className="h-4 w-4 text-muted-foreground" />
+                    <AvatarFallback className="bg-secondary">
+                       <User className="h-4 w-4 text-muted-foreground" />
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
@@ -268,9 +293,15 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
                           {comment.isAuthor ? (
                                 <Badge variant="secondary" className="border border-accent/50 text-accent">Author</Badge>
                           ) : (
-                               <span className="font-semibold text-sm" style={{ color: anonCreateColor(comment.anonHash) }}>
-                                    Anonymous
-                               </span>
+                               <div className="flex items-center gap-2">
+                                    <div 
+                                        className="w-2.5 h-2.5 rounded-full" 
+                                        style={{ backgroundColor: commentColorMap.get(comment.anonHash) || '#888' }}>
+                                    </div>
+                                    <span className="font-semibold text-sm text-foreground">
+                                        Anonymous
+                                    </span>
+                               </div>
                           )}
                         <span className="text-xs text-muted-foreground">
                           {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
