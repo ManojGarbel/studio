@@ -174,11 +174,11 @@ export async function submitConfession(prevState: any, formData: FormData) {
 
     const initialStatus = moderationResult.isToxic ? 'rejected' : 'pending';
 
-    const { data, error } = await supabase.from('confessions').insert({
+    const { error } = await supabase.from('confessions').insert({
       text: confessionText,
       anon_hash: anonHash,
       status: initialStatus,
-    }).select();
+    });
 
     if (error) {
       console.error('Error submitting confession:', error);
