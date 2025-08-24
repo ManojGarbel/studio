@@ -49,14 +49,15 @@ const COMMENT_COLOR_PALETTE = [
   '#F7786B', '#A2D4AB', '#F9A828', '#2AB7CA', '#F56991'
 ];
 
-const SYNTAX_HIGHLIGHT_COLORS = [
-    'text-primary', // Neon Green
-    'text-foreground', // Star White
-    'text-accent', // Electric Purple
-    'text-cyan-400',
-    'text-fuchsia-400',
-    'text-yellow-300'
-];
+const SYNTAX_HIGHLIGHT_COLORS = {
+    keyword: 'text-primary', // Neon Green for keywords
+    string: 'text-accent', // Electric Purple for strings
+    number: 'text-yellow-400',
+    default: 'text-foreground/90' // Default text color
+};
+
+const KEYWORDS = ['fix', 'bug', 'error', 'pushed', 'main', 'production', 'friday', 'debug', 'console.log', 'git', 'commit', 'database', 'server', 'client', 'react', 'javascript', 'typescript', 'css', 'html', 'python', 'java', 'c#', 'c++', 'php', 'ruby', 'go', 'rust', 'sql'];
+
 
 const IncognitoIcon = ({ className }: { className?: string }) => (
     <svg
@@ -70,16 +71,23 @@ const IncognitoIcon = ({ className }: { className?: string }) => (
 );
 
 const CodeSyntaxHighlighter = ({ text }: { text: string }) => {
-    const words = text.split(/(\s+)/); // Split by whitespace but keep it
+    const words = text.split(/(\s+|[.,;!?()])/); // Split by whitespace and punctuation but keep them
     
     return (
-        <pre className="whitespace-pre-wrap break-words font-code text-base text-foreground/90">
+        <pre className="whitespace-pre-wrap break-words font-code text-base">
             <code>
                 {words.map((word, index) => {
-                    if (word.trim() === '') {
-                        return <span key={index}>{word}</span>;
+                    const lowerWord = word.toLowerCase();
+                    let colorClass = SYNTAX_HIGHLIGHT_COLORS.default;
+                    
+                    if (KEYWORDS.includes(lowerWord)) {
+                        colorClass = SYNTAX_HIGHLIGHT_COLORS.keyword;
+                    } else if (!isNaN(Number(word))) {
+                        colorClass = SYNTAX_HIGHLIGHT_COLORS.number;
+                    } else if ((word.startsWith('"') && word.endsWith('"')) || (word.startsWith("'") && word.endsWith("'"))) {
+                        colorClass = SYNTAX_HIGHLIGHT_COLORS.string;
                     }
-                    const colorClass = SYNTAX_HIGHLIGHT_COLORS[index % SYNTAX_HIGHLIGHT_COLORS.length];
+
                     return <span key={index} className={colorClass}>{word}</span>;
                 })}
             </code>
