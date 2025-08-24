@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -16,7 +17,6 @@ import {
   ThumbsDown,
   Send,
   User,
-  UserX,
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { useState, useTransition, useRef, useEffect, useMemo } from 'react';
@@ -49,6 +49,17 @@ const COMMENT_COLOR_PALETTE = [
   '#FF6B6B', '#4ECDC4', '#45B7D1', '#FED766', '#8A63D2',
   '#F7786B', '#A2D4AB', '#F9A828', '#2AB7CA', '#F56991'
 ];
+
+const IncognitoIcon = ({ className }: { className?: string }) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 256 256"
+      className={className}
+      fill="currentColor"
+    >
+      <path d="M228,52a92.1,92.1,0,0,0-155.1-40.2A92,92,0,0,0,28,144a91.3,91.3,0,0,0,3,23.3,92,92,0,0,0,165.7,35.4,8,8,0,0,0,2.6-11.4A8,8,0,0,0,188,188a76,76,0,1,1,1.8-64.4,8,8,0,0,0,15.8,1.9A92.2,92.2,0,0,0,228,52Zm-92,76a40,40,0,1,1,40-40A40,40,0,0,1,136,128Z" />
+    </svg>
+);
 
 
 export function ConfessionCard({ confession: initialConfession }: ConfessionCardProps) {
@@ -209,13 +220,16 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
       <CardHeader className="flex flex-row items-start gap-4">
         <Avatar className="border-2 border-primary/50 mt-1">
            <AvatarFallback className="bg-secondary">
-             <UserX className="h-5 w-5 text-muted-foreground" />
+              <IncognitoIcon className="h-6 w-6 text-muted-foreground" />
            </AvatarFallback>
         </Avatar>
         <div className="flex-grow flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="font-semibold text-primary">Anonymous</p>
+                <p className="font-semibold text-primary">
+                  Anonymous
+                  <span className="text-muted-foreground font-mono">#{confession.anonHash.substring(0, 6)}</span>
+                </p>
                 {getStatusBadge()}
               </div>
               <p className="text-sm text-muted-foreground">{timeAgo}</p>
@@ -312,7 +326,7 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
                 <div key={comment.id} className="flex gap-3 group">
                   <Avatar className="h-8 w-8 border border-primary/30">
                     <AvatarFallback className="bg-secondary">
-                       <User className="h-4 w-4 text-muted-foreground" />
+                       <IncognitoIcon className="h-5 w-5 text-muted-foreground" />
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
@@ -327,7 +341,7 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
                                         style={{ backgroundColor: commentColorMap.get(comment.anonHash) || '#888' }}>
                                     </div>
                                     <span className="font-semibold text-sm text-foreground">
-                                        Anonymous
+                                        Anonymous<span className="text-muted-foreground font-mono">#{comment.anonHash.substring(0, 6)}</span>
                                     </span>
                                </div>
                           )}
@@ -360,3 +374,5 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
     </Card>
   );
 }
+
+  
