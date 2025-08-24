@@ -1,19 +1,21 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Source_Code_Pro } from 'next/font/google';
+import { Barlow, Monoton } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/header';
 import Link from 'next/link';
 
-const fontBody = Inter({
+const fontBody = Barlow({
   subsets: ['latin'],
   variable: '--font-body',
+  weight: ['400', '500', '600', '700'],
 });
 
-const fontCode = Source_Code_Pro({
+const fontCode = Monoton({
   subsets: ['latin'],
   variable: '--font-code',
+  weight: '400',
 });
 
 export const metadata: Metadata = {
