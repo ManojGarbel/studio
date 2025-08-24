@@ -92,15 +92,15 @@ const Header = () => {
                     sequence={[
                       'Share your secret...',
                       2000,
-                      'Unburden your mind.',
+                      'Apna raaz batao.',
                       2000,
-                      'Your story is safe here.',
+                      'Tomar golpo bolo.',
                       2000,
-                      'Let it all out.',
+                      'Your code is safe.',
                       2000,
-                      'Whisper your code.',
+                      'Sab kuch keh do.',
                       2000,
-                      'Confess and be free.',
+                      'Moner kotha bolo.',
                       2000
                     ]}
                     wrapper="span"
