@@ -20,3 +20,23 @@ export async function isUserBanned(anonHash: string): Promise<boolean> {
   
     return !!data;
 }
+
+
+export async function getLastPostTime(anonHash: string): Promise<Date | null> {
+    const cookieStore = cookies();
+    const supabase = createServiceRoleServerClient(cookieStore);
+    const { data, error } = await supabase
+        .from('confessions')
+        .select('created_at')
+        .eq('anon_hash', anonHash)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+    
+    if(error && error.code !== 'PGRST116') {
+        console.error('Error fetching last post time', error);
+        return null;
+    }
+
+    return data ? new Date(data.created_at) : null;
+}

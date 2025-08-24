@@ -4,10 +4,15 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import type { Confession } from './types';
 import { moderateConfession } from '@/ai/flows/moderate-confession';
-import { createServerClient, createServiceRoleServerClient } from './supabase/server';
+import {
+  createServerClient,
+  createServiceRoleServerClient,
+} from './supabase/server';
 import { cookies } from 'next/headers';
 import { PII_REGEX } from './utils';
-import { isUserBanned } from './db';
+import { isUserBanned, getLastPostTime } from './db';
+
+const TEN_MINUTES = 10 * 60 * 1000;
 
 export async function getConfessions(): Promise<Confession[]> {
   const cookieStore = cookies();
@@ -29,7 +34,6 @@ export async function getConfessions(): Promise<Confession[]> {
     .eq('status', 'approved')
     .order('created_at', { ascending: false })
     .order('created_at', { foreignTable: 'comments', ascending: true });
-
 
   if (error) {
     console.error('Error fetching confessions:', error);
@@ -56,12 +60,12 @@ export async function getConfessions(): Promise<Confession[]> {
 }
 
 export async function getAllConfessionsForAdmin(): Promise<Confession[]> {
-    const cookieStore = cookies();
-    const supabase = createServiceRoleServerClient(cookieStore);
-    const { data, error } = await supabase
-      .from('confessions')
-      .select(
-        `
+  const cookieStore = cookies();
+  const supabase = createServiceRoleServerClient(cookieStore);
+  const { data, error } = await supabase
+    .from('confessions')
+    .select(
+      `
         id,
         text,
         created_at,
@@ -71,32 +75,31 @@ export async function getAllConfessionsForAdmin(): Promise<Confession[]> {
         dislikes,
         comments ( id, text, created_at, anon_hash, is_author )
       `
-      )
-      .order('created_at', { ascending: false });
-  
-    if (error) {
-      console.error('Error fetching confessions for admin:', error);
-      return [];
-    }
-  
-    return data.map((item: any) => ({
-      id: item.id,
-      text: item.text,
-      timestamp: new Date(item.created_at),
-      anonHash: item.anon_hash,
-      status: item.status,
-      likes: item.likes,
-      dislikes: item.dislikes,
-      comments: item.comments.map((c: any) => ({
-        id: c.id,
-        text: c.text,
-        timestamp: new Date(c.created_at),
-        anonHash: c.anon_hash,
-        isAuthor: c.is_author,
-      })),
-    }));
-}
+    )
+    .order('created_at', { ascending: false });
 
+  if (error) {
+    console.error('Error fetching confessions for admin:', error);
+    return [];
+  }
+
+  return data.map((item: any) => ({
+    id: item.id,
+    text: item.text,
+    timestamp: new Date(item.created_at),
+    anonHash: item.anon_hash,
+    status: item.status,
+    likes: item.likes,
+    dislikes: item.dislikes,
+    comments: item.comments.map((c: any) => ({
+      id: c.id,
+      text: c.text,
+      timestamp: new Date(c.created_at),
+      anonHash: c.anon_hash,
+      isAuthor: c.is_author,
+    })),
+  }));
+}
 
 export async function updateConfessionStatus(
   id: string,
@@ -135,14 +138,24 @@ export async function submitConfession(prevState: any, formData: FormData) {
       message: 'User not authenticated. Please activate your account.',
     };
   }
-  
+
   const banned = await isUserBanned(anonHash);
   if (banned) {
+    return {
+      success: false,
+      message: 'You are banned from posting confessions.',
+    };
+  }
+
+  const lastPostTime = await getLastPostTime(anonHash);
+  if (lastPostTime && Date.now() - lastPostTime.getTime() < TEN_MINUTES) {
+      const remainingTime = Math.ceil((TEN_MINUTES - (Date.now() - lastPostTime.getTime())) / 60000);
       return {
           success: false,
-          message: 'You are banned from posting confessions.'
+          message: `You must wait ${remainingTime} more minute(s) to post again.`
       }
   }
+
 
   const rawConfession = formData.get('confession');
   const validatedFields = confessionSchema.safeParse(rawConfession);
@@ -190,13 +203,12 @@ export async function submitConfession(prevState: any, formData: FormData) {
 
     revalidatePath('/');
     revalidatePath('/admin');
-    
+
     return {
-        success: true,
-        message:
+      success: true,
+      message:
         'Your confession has been submitted and is pending review. Thank you.',
     };
-
   } catch (error) {
     console.error('Error during confession submission:', error);
     return {
@@ -231,32 +243,36 @@ export async function activateAccount(prevState: any, formData: FormData) {
   }
 
   const anonHash = crypto.randomUUID();
-  
+
   return {
     success: true,
     message: 'Account activated! You can now share your confessions.',
-    anonHash: anonHash
+    anonHash: anonHash,
   };
 }
 
 export async function handleLike(confessionId: string) {
-    const cookieStore = cookies();
-    const supabase = createServiceRoleServerClient(cookieStore);
-    const { error } = await supabase.rpc('increment_like', { row_id: confessionId });
-    if (error) {
-        console.error('Error liking post', error);
-    }
-    revalidatePath('/');
+  const cookieStore = cookies();
+  const supabase = createServiceRoleServerClient(cookieStore);
+  const { error } = await supabase.rpc('increment_like', {
+    row_id: confessionId,
+  });
+  if (error) {
+    console.error('Error liking post', error);
+  }
+  revalidatePath('/');
 }
 
 export async function handleDislike(confessionId: string) {
-    const cookieStore = cookies();
-    const supabase = createServiceRoleServerClient(cookieStore);
-    const { error } = await supabase.rpc('increment_dislike', { row_id: confessionId });
-    if (error) {
-        console.error('Error disliking post', error);
-    }
-    revalidatePath('/');
+  const cookieStore = cookies();
+  const supabase = createServiceRoleServerClient(cookieStore);
+  const { error } = await supabase.rpc('increment_dislike', {
+    row_id: confessionId,
+  });
+  if (error) {
+    console.error('Error disliking post', error);
+  }
+  revalidatePath('/');
 }
 
 const commentSchema = z
@@ -265,102 +281,127 @@ const commentSchema = z
   .max(500, 'Comment is too long.');
 
 export async function addComment(confessionId: string, formData: FormData) {
-    const cookieStore = cookies();
-    const supabase = createServiceRoleServerClient(cookieStore);
-    const anonHash = cookieStore.get('anon_hash')?.value;
+  const cookieStore = cookies();
+  const supabase = createServiceRoleServerClient(cookieStore);
+  const anonHash = cookieStore.get('anon_hash')?.value;
 
   if (!anonHash) {
-    return { success: false, message: 'Could not add comment. User not authenticated.' };
+    return {
+      success: false,
+      message: 'Could not add comment. User not authenticated.',
+    };
   }
 
   const banned = await isUserBanned(anonHash);
   if (banned) {
-      return {
-          success: false,
-          message: 'You are banned from posting comments.'
-      }
+    return {
+      success: false,
+      message: 'You are banned from posting comments.',
+    };
   }
-  
+
   const validatedFields = commentSchema.safeParse(formData.get('comment'));
 
   if (!validatedFields.success) {
     return { success: false, message: validatedFields.error.issues[0].message };
   }
 
-  const { data: confessionAuthor } = await supabase.from('confessions').select('anon_hash').eq('id', confessionId).single();
-  
-  if(!confessionAuthor){
-      return { success: false, message: 'Confession not found.' };
+  const { data: confessionAuthor } = await supabase
+    .from('confessions')
+    .select('anon_hash')
+    .eq('id', confessionId)
+    .single();
+
+  if (!confessionAuthor) {
+    return { success: false, message: 'Confession not found.' };
   }
 
   const isAuthor = confessionAuthor.anon_hash === anonHash;
 
   const { error } = await supabase.from('comments').insert({
-      text: validatedFields.data,
-      confession_id: confessionId,
-      anon_hash: anonHash,
-      is_author: isAuthor
-  })
+    text: validatedFields.data,
+    confession_id: confessionId,
+    anon_hash: anonHash,
+    is_author: isAuthor,
+  });
 
-  if(error){
-      console.error('Error adding comment', error);
-      return { success: false, message: "Failed to add comment." };
+  if (error) {
+    console.error('Error adding comment', error);
+    return { success: false, message: 'Failed to add comment.' };
   }
 
   revalidatePath('/');
   return { success: true };
 }
 
-
 export async function reportConfession(confessionId: string) {
-    const cookieStore = cookies();
-    const supabase = createServiceRoleServerClient(cookieStore);
+  const cookieStore = cookies();
+  const supabase = createServiceRoleServerClient(cookieStore);
 
-    const { data: confession, error: fetchError } = await supabase.from('confessions').select('status').eq('id', confessionId).single();
+  const { data: confession, error: fetchError } = await supabase
+    .from('confessions')
+    .select('status')
+    .eq('id', confessionId)
+    .single();
 
-    if(fetchError || !confession) {
-        return { success: false, message: 'Confession not found.' };
-    }
+  if (fetchError || !confession) {
+    return { success: false, message: 'Confession not found.' };
+  }
 
-    if(confession.status === 'pending') {
-        return { success: false, message: 'This confession is already pending review.' };
-    }
+  if (confession.status === 'pending') {
+    return {
+      success: false,
+      message: 'This confession is already pending review.',
+    };
+  }
 
-    const { error } = await supabase.from('confessions').update({ status: 'pending' }).eq('id', confessionId);
-    
-    if (error) {
-        return { success: false, message: 'Failed to report confession.' };
-    }
+  const { error } = await supabase
+    .from('confessions')
+    .update({ status: 'pending' })
+    .eq('id', confessionId);
 
-    revalidatePath('/');
-    revalidatePath('/admin');
-    return { success: true, message: 'Confession reported for review.' };
+  if (error) {
+    return { success: false, message: 'Failed to report confession.' };
+  }
+
+  revalidatePath('/');
+  revalidatePath('/admin');
+  return { success: true, message: 'Confession reported for review.' };
 }
 
 export async function deleteConfession(confessionId: string) {
-    const cookieStore = cookies();
-    const supabase = createServiceRoleServerClient(cookieStore);
-    const { error } = await supabase.from('confessions').delete().eq('id', confessionId);
-    if(error){
-        return { success: false, message: 'Failed to delete confession.' };
-    }
-    revalidatePath('/');
-    revalidatePath('/admin');
-    return { success: true, message: 'Confession deleted.' };
+  const cookieStore = cookies();
+  const supabase = createServiceRoleServerClient(cookieStore);
+  const { error } = await supabase
+    .from('confessions')
+    .delete()
+    .eq('id', confessionId);
+  if (error) {
+    return { success: false, message: 'Failed to delete confession.' };
+  }
+  revalidatePath('/');
+  revalidatePath('/admin');
+  return { success: true, message: 'Confession deleted.' };
 }
 
 export async function banUser(anonHash: string) {
-    const cookieStore = cookies();
-    const supabase = createServiceRoleServerClient(cookieStore);
-    const { error } = await supabase.from('banned_users').insert({ anon_hash: anonHash });
+  const cookieStore = cookies();
+  const supabase = createServiceRoleServerClient(cookieStore);
+  const { error } = await supabase
+    .from('banned_users')
+    .insert({ anon_hash: anonHash });
 
-    if(error){
-        if(error.code === '23505'){ // unique constraint violation
-            return { success: false, message: 'User is already banned.' };
-        }
-        return { success: false, message: 'Failed to ban user.' };
+  if (error) {
+    if (error.code === '23505') {
+      // unique constraint violation
+      return { success: false, message: 'User is already banned.' };
     }
-    
-    revalidatePath('/admin');
-    return { success: true, message: `User ${anonHash.substring(0,6)}... has been banned.` };
+    return { success: false, message: 'Failed to ban user.' };
+  }
+
+  revalidatePath('/admin');
+  return {
+    success: true,
+    message: `User ${anonHash.substring(0, 6)}... has been banned.`,
+  };
 }
