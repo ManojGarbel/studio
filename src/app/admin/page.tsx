@@ -1,4 +1,4 @@
-import { getAllConfessionsForAdmin } from '@/lib/actions';
+import { getAllConfessionsForAdmin, signOutAdmin } from '@/lib/actions';
 import { Badge } from '@/components/ui/badge';
 import {
   Card,
@@ -11,16 +11,16 @@ import { redirect } from 'next/navigation';
 import AdminActions from './_components/admin-actions';
 import { format } from 'date-fns';
 import { isUserBanned } from '@/lib/db';
+import { cookies } from 'next/headers';
+import { Button } from '@/components/ui/button';
+import { LogOut } from 'lucide-react';
 
-export default async function AdminPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
-}) {
-  const secretKey = searchParams['secret'];
+export default async function AdminPage() {
+  const cookieStore = cookies();
+  const isAdmin = cookieStore.get('admin-auth')?.value === 'true';
 
-  if (secretKey !== process.env.ADMIN_SECRET_KEY) {
-    redirect('/');
+  if (!isAdmin) {
+    redirect('/admin/login');
   }
 
   const confessions = await getAllConfessionsForAdmin();
@@ -40,7 +40,15 @@ export default async function AdminPage({
 
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold mb-6 text-center md:text-left">Admin Dashboard</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-center md:text-left">Admin Dashboard</h1>
+        <form action={signOutAdmin}>
+          <Button variant="outline" size="sm">
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </Button>
+        </form>
+      </div>
 
       <div className="flex flex-col gap-6">
         {confessions.length > 0 ? (

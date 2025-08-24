@@ -7,7 +7,7 @@ import { createServiceRoleServerClient } from './supabase/server';
 import { cookies, headers } from 'next/headers';
 import { PII_REGEX } from './utils';
 import { isUserBanned, getLastPostTime } from './db';
-import { moderateConfession } from '@/ai/flows/moderate-confession';
+import { redirect } from 'next/navigation';
 
 const TEN_MINUTES = 10 * 60 * 1000;
 
@@ -189,7 +189,7 @@ export async function submitConfession(prevState: any, formData: FormData) {
     });
 
     if (error) {
-      console.error('Full error during confession submission:', error);
+      console.error('Error during confession submission:', error);
       return {
         success: false,
         message: 'Failed to submit confession. Database error.',
@@ -436,4 +436,44 @@ export async function banUser(anonHash: string) {
     success: true,
     message: `User ${anonHash.substring(0, 6)}... has been banned.`,
   };
+}
+
+
+const adminAuthSchema = z.string().min(1, 'Secret key is required.');
+
+export async function authenticateAdmin(prevState: any, formData: FormData) {
+  const rawSecretKey = formData.get('secretKey');
+  const validatedFields = adminAuthSchema.safeParse(rawSecretKey);
+
+  if (!validatedFields.success) {
+    return {
+      success: false,
+      message: validatedFields.error.issues[0].message,
+    };
+  }
+
+  if (validatedFields.data === process.env.ADMIN_SECRET_KEY) {
+    const cookieStore = cookies();
+    cookieStore.set('admin-auth', 'true', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24, // 1 day
+      path: '/',
+    });
+    return {
+      success: true,
+      message: 'Successfully authenticated!',
+    };
+  } else {
+    return {
+      success: false,
+      message: 'Invalid secret key.',
+    };
+  }
+}
+
+export async function signOutAdmin() {
+  const cookieStore = cookies();
+  cookieStore.delete('admin-auth');
+  redirect('/admin/login');
 }
