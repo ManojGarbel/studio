@@ -16,7 +16,7 @@ export async function getConfessions(): Promise<Confession[]> {
   const supabase = createServiceRoleServerClient(cookieStore);
   const anonHash = cookieStore.get('anon_hash')?.value;
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('confessions')
     .select(
       `
@@ -28,11 +28,22 @@ export async function getConfessions(): Promise<Confession[]> {
       likes,
       dislikes,
       comments ( id, text, created_at, anon_hash, is_author ),
-      post_interactions ( interaction_type )
+      post_interactions ( user_anon_hash, interaction_type )
     `
     )
     .order('created_at', { ascending: false })
     .order('created_at', { foreignTable: 'comments', ascending: true });
+
+  // If the user is logged in, show their own posts regardless of status.
+  // Otherwise, only show approved posts.
+  if (anonHash) {
+    query = query.or(`status.eq.approved,and(status.in.("pending","rejected"),anon_hash.eq.${anonHash})`);
+  } else {
+    query = query.eq('status', 'approved');
+  }
+
+  const { data, error } = await query;
+
 
   if (error) {
     console.error('Error fetching confessions:', error);
@@ -108,6 +119,7 @@ export async function getAllConfessionsForAdmin(): Promise<Confession[]> {
       anonHash: c.anon_hash,
       isAuthor: c.is_author,
     })),
+    userInteraction: null,
   }));
 }
 
@@ -198,7 +210,7 @@ export async function submitConfession(prevState: any, formData: FormData) {
     const { error } = await supabase.from('confessions').insert({
       text: confessionText,
       anon_hash: anonHash,
-      status: 'approved', // Set status to 'approved' by default
+      status: 'pending', // Set status to 'pending' by default
     });
 
     if (error) {
@@ -213,7 +225,7 @@ export async function submitConfession(prevState: any, formData: FormData) {
 
     return {
       success: true,
-      message: 'Your confession has been posted. Thank you.',
+      message: 'Your confession has been submitted for review. Thank you.',
     };
   } catch (error: any) {
     console.error('Full error during confession submission:', error);
@@ -244,7 +256,7 @@ export async function activateAccount(prevState: any, formData: FormData) {
     };
   }
 
-  if (validatedFields.data !== process.env.ACTIVATION_KEY) {
+  if (validatedFields.data !== 'WELCOME') {
     return {
       success: false,
       message: 'Invalid activation key.',
@@ -591,5 +603,3 @@ export async function signOutAdmin() {
   cookieStore.delete('admin-auth');
   redirect('/admin/login');
 }
-
-    

@@ -38,6 +38,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical } from 'lucide-react';
+import Cookies from 'js-cookie';
 
 
 interface ConfessionCardProps {
@@ -57,6 +58,11 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
   const formRef = useRef<HTMLFormElement>(null);
   
   const [confession, setConfession] = useState(initialConfession);
+  const [currentUserAnonHash, setCurrentUserAnonHash] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    setCurrentUserAnonHash(Cookies.get('anon_hash'));
+  }, []);
 
   const commentColorMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -85,6 +91,25 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
   const timeAgo = formatDistanceToNow(new Date(confession.timestamp), {
     addSuffix: true,
   });
+
+  const isAuthor = confession.anonHash === currentUserAnonHash;
+
+  const getStatusBadge = () => {
+    if (!isAuthor) return null;
+
+    switch (confession.status) {
+      case 'pending':
+        return <Badge variant="secondary">Pending</Badge>;
+      case 'approved':
+        return <Badge variant="default">Approved</Badge>;
+      // 'rejected' status posts are filtered out by the backend for authors, but we can handle it just in case
+      case 'rejected':
+         return <Badge variant="destructive">Rejected</Badge>;
+      default:
+        return null;
+    }
+  };
+
 
   const onLike = () => {
     startTransition(async () => {
@@ -181,15 +206,18 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-row items-center gap-4">
-        <Avatar className="border-2 border-primary/50">
+      <CardHeader className="flex flex-row items-start gap-4">
+        <Avatar className="border-2 border-primary/50 mt-1">
            <AvatarFallback className="bg-secondary">
              <UserX className="h-5 w-5 text-muted-foreground" />
            </AvatarFallback>
         </Avatar>
-        <div className="flex-grow flex items-center justify-between">
+        <div className="flex-grow flex items-start justify-between">
             <div>
-              <p className="font-semibold text-primary">Anonymous</p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="font-semibold text-primary">Anonymous</p>
+                {getStatusBadge()}
+              </div>
               <p className="text-sm text-muted-foreground">{timeAgo}</p>
             </div>
              <DropdownMenu>
