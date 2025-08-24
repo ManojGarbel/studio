@@ -1,7 +1,6 @@
 import type {Config} from 'tailwindcss';
 
 export default {
-  darkMode: ['class'],
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -72,11 +71,20 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        // Custom colors for syntax highlighting
+        keyword: "hsl(var(--primary))",    // cyan
+        string: "hsl(var(--accent))",     // neon green
+        number: "#ffb347",     // orange
+        tag: "#ff2ef5",        // magenta
+        comment: "hsl(var(--muted-foreground))", // gray
       },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+      },
+      boxShadow: {
+        neon: "0 0 15px theme(colors.primary / 30%)",
       },
       keyframes: {
         'accordion-down': {

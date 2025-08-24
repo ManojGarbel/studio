@@ -8,47 +8,56 @@ body {
 
 @layer base {
   :root {
-    --background: 240 10% 4%; /* Deepest Space Black */
-    --foreground: 210 40% 98%; /* Star White */
-    --card: 240 10% 8%; /* Darker Space Panel */
-    --card-foreground: 210 40% 98%;
-    --popover: 240 10% 4%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 130 100% 50%; /* Neon Green */
-    --primary-foreground: 240 10% 4%; /* Deep Space Black for text on primary */
-    --secondary: 240 10% 15%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 240 10% 15%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 280 100% 60%; /* Electric Purple */
-    --accent-foreground: 210 40% 98%;
+    --background: 240 6% 6%; /* #0a0a0f */
+    --foreground: 240 5% 95%; /* Light Gray/White */
+    
+    --card: 240 6% 8%; /* #11121a */
+    --card-foreground: 240 5% 95%;
+
+    --popover: 240 6% 6%;
+    --popover-foreground: 240 5% 95%;
+
+    --primary: 173 100% 50%; /* #00ffe0 - Neon Cyan/Keyword */
+    --primary-foreground: 240 6% 6%;
+
+    --secondary: 240 6% 12%;
+    --secondary-foreground: 240 5% 95%;
+
+    --muted: 240 6% 12%;
+    --muted-foreground: 240 4% 48%; /* #7c7c7c - Comment */
+
+    --accent: 98 100% 55%; /* #39ff14 - Neon Green/String */
+    --accent-foreground: 240 6% 6%;
+
     --destructive: 0 100% 50%; /* Bright Neon Red */
-    --destructive-foreground: 210 40% 98%;
-    --border: 130 100% 25%; /* Green border */
-    --input: 240 10% 15%;
-    --ring: 130 100% 50%; /* Neon Green for rings */
+    --destructive-foreground: 240 5% 95%;
+
+    --border: 173 100% 25%; /* Darker Cyan for borders */
+    --input: 240 6% 12%;
+    --ring: 173 100% 50%; /* Neon Cyan for rings */
+
     --radius: 0.5rem;
   }
   .dark {
-    --background: 240 10% 4%;
-    --foreground: 210 40% 98%;
-    --card: 240 10% 8%;
-    --card-foreground: 210 40% 98%;
-    --popover: 240 10% 4%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 130 100% 50%;
-    --primary-foreground: 240 10% 4%;
-    --secondary: 240 10% 15%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 240 10% 15%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 280 100% 60%;
-    --accent-foreground: 210 40% 98%;
+    --background: 240 6% 6%;
+    --foreground: 240 5% 95%;
+    --card: 240 6% 8%;
+    --card-foreground: 240 5% 95%;
+    --popover: 240 6% 6%;
+    --popover-foreground: 240 5% 95%;
+    --primary: 173 100% 50%;
+    --primary-foreground: 240 6% 6%;
+    --secondary: 240 6% 12%;
+    --secondary-foreground: 240 5% 95%;
+    --muted: 240 6% 12%;
+    --muted-foreground: 240 4% 48%;
+    --accent: 98 100% 55%;
+    --accent-foreground: 240 6% 6%;
     --destructive: 0 100% 50%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 130 100% 25%;
-    --input: 240 10% 15%;
-    --ring: 130 100% 50%;
+    --destructive-foreground: 240 5% 95%;
+    --border: 173 100% 25%;
+    --input: 240 6% 12%;
+    --ring: 173 100% 50%;
     --radius: 0.5rem;
   }
 }
@@ -59,6 +68,7 @@ body {
   }
   body {
     @apply bg-background text-foreground font-code;
+    text-shadow: 0 0 2px hsl(var(--primary) / 0.1);
   }
 }
 
@@ -72,7 +82,7 @@ body {
     .stars-bg {
         position: relative;
         overflow: hidden;
-        background: radial-gradient(ellipse at bottom, hsl(240 10% 8%), hsl(var(--background)));
+        background: radial-gradient(ellipse at bottom, hsl(240 6% 8%), hsl(var(--background)));
     }
     
     .stars-bg::before, .stars-bg::after {

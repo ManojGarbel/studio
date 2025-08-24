@@ -50,10 +50,11 @@ const COMMENT_COLOR_PALETTE = [
 ];
 
 const SYNTAX_HIGHLIGHT_COLORS = {
-    keyword: 'text-primary', // Neon Green for keywords
-    string: 'text-accent', // Electric Purple for strings
-    number: 'text-yellow-400',
-    default: 'text-foreground/90' // Default text color
+    keyword: 'text-keyword', 
+    string: 'text-string',
+    number: 'text-number',
+    tag: 'text-tag',
+    default: 'text-foreground/90'
 };
 
 const KEYWORDS = ['fix', 'bug', 'error', 'pushed', 'main', 'production', 'friday', 'debug', 'console.log', 'git', 'commit', 'database', 'server', 'client', 'react', 'javascript', 'typescript', 'css', 'html', 'python', 'java', 'c#', 'c++', 'php', 'ruby', 'go', 'rust', 'sql'];
@@ -295,11 +296,11 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
               aria-label="Like"
               onClick={onLike}
               disabled={isPending}
-              className="flex items-center gap-2 hover:text-accent"
+              className="flex items-center gap-2 hover:text-string"
             >
               <Heart
                 className={`h-5 w-5 ${
-                  confession.userInteraction === 'like' ? 'text-accent fill-current' : 'text-muted-foreground'
+                  confession.userInteraction === 'like' ? 'text-string fill-current' : 'text-muted-foreground'
                 }`}
               />
               <span>{confession.likes}</span>
@@ -357,7 +358,7 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
                     <div className="flex items-center justify-between">
                        <div className="flex items-center gap-2 flex-wrap">
                           {comment.isAuthor ? (
-                                <Badge variant="secondary" className="border border-accent/50 text-accent">Author</Badge>
+                                <Badge variant="secondary" className="border border-string/50 text-string">Author</Badge>
                           ) : (
                                <div className="flex items-center gap-2">
                                     <div 
