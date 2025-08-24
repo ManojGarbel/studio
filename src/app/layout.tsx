@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, Source_Code_Pro } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
@@ -19,7 +19,13 @@ const fontCode = Source_Code_Pro({
 export const metadata: Metadata = {
   title: '<ConfessCode/>',
   description: 'Anonymously confess your coding sins.',
+  manifest: '/manifest.webmanifest',
 };
+
+export const viewport: Viewport = {
+  themeColor: '#00FFFF',
+};
+
 
 export default function RootLayout({
   children,

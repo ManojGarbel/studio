@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Code2, User, Power, Info } from 'lucide-react';
+import { Code2, User, Power, Info, Download } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
@@ -14,7 +14,31 @@ const Header = () => {
   const [anonHash, setAnonHash] = useState<string | undefined>(undefined);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [logoClickCount, setLogoClickCount] = useState(0);
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
   const router = useRouter();
+  
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setInstallPrompt(null);
+    }
+  };
+
 
   useEffect(() => {
     const checkActivation = () => {
@@ -66,12 +90,18 @@ const Header = () => {
                 <h1 className="font-code tracking-tighter">
                   <TypeAnimation
                     sequence={[
-                      './run <ConfessCode/>',
+                      'Share your secret...',
                       2000,
-                      'cat /var/log/anonymous.log',
+                      'Unburden your mind.',
                       2000,
-                      'git blame --guilt',
+                      'Your story is safe here.',
                       2000,
+                      'Let it all out.',
+                      2000,
+                      'Whisper your code.',
+                      2000,
+                      'Confess and be free.',
+                      2000
                     ]}
                     wrapper="span"
                     speed={50}
@@ -82,6 +112,18 @@ const Header = () => {
               </Link>
           </div>
           <div className="flex items-center gap-2">
+            {installPrompt && (
+               <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleInstallClick}
+                  aria-label="Install App"
+                  title="Install ConfessCode"
+                  className="hover:text-accent hover:shadow-[0_0_20px_theme(colors.accent)]"
+                >
+                  <Download />
+                </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
