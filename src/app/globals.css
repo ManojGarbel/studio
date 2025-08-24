@@ -14,7 +14,7 @@ body {
     --card-foreground: 210 40% 98%;
     --popover: 240 10% 4%;
     --popover-foreground: 210 40% 98%;
-    --primary: 180 100% 50%; /* Neon Cyan */
+    --primary: 130 100% 50%; /* Neon Green */
     --primary-foreground: 240 10% 4%; /* Deep Space Black for text on primary */
     --secondary: 240 10% 15%;
     --secondary-foreground: 210 40% 98%;
@@ -24,9 +24,9 @@ body {
     --accent-foreground: 210 40% 98%;
     --destructive: 0 100% 50%; /* Bright Neon Red */
     --destructive-foreground: 210 40% 98%;
-    --border: 180 100% 25%; /* Cyan border */
+    --border: 130 100% 25%; /* Green border */
     --input: 240 10% 15%;
-    --ring: 180 100% 50%; /* Neon Cyan for rings */
+    --ring: 130 100% 50%; /* Neon Green for rings */
     --radius: 0.5rem;
   }
   .dark {
@@ -36,7 +36,7 @@ body {
     --card-foreground: 210 40% 98%;
     --popover: 240 10% 4%;
     --popover-foreground: 210 40% 98%;
-    --primary: 180 100% 50%;
+    --primary: 130 100% 50%;
     --primary-foreground: 240 10% 4%;
     --secondary: 240 10% 15%;
     --secondary-foreground: 210 40% 98%;
@@ -46,9 +46,9 @@ body {
     --accent-foreground: 210 40% 98%;
     --destructive: 0 100% 50%;
     --destructive-foreground: 210 40% 98%;
-    --border: 180 100% 25%;
+    --border: 130 100% 25%;
     --input: 240 10% 15%;
-    --ring: 180 100% 50%;
+    --ring: 130 100% 50%;
     --radius: 0.5rem;
   }
 }
@@ -62,20 +62,20 @@ body {
   }
 }
 
+
 @layer utilities {
-    @keyframes keyframes-aurora {
-        from {
-            background-position: 50% 50%, 50% 50%
-        }
-        to {
-            background-position: 350% 50%, 350% 50%
-        }
+    @keyframes move-stars {
+        from { transform: translateY(0px); }
+        to { transform: translateY(-2000px); }
     }
-    .aurora-bg {
+
+    .stars-bg {
         position: relative;
         overflow: hidden;
+        background: radial-gradient(ellipse at bottom, hsl(240 10% 8%), hsl(var(--background)));
     }
-    .aurora-bg::before {
+    
+    .stars-bg::before, .stars-bg::after {
         content: "";
         position: absolute;
         top: 0;
@@ -83,11 +83,38 @@ body {
         right: 0;
         bottom: 0;
         z-index: -1;
-        background-image:
-            radial-gradient(ellipse at 25% 0%, hsl(var(--primary) / 0.15), transparent 50%),
-            radial-gradient(ellipse at 75% 100%, hsl(var(--accent) / 0.15), transparent 50%);
-        background-size: 500% 500%;
-        animation: keyframes-aurora 20s infinite linear;
-        will-change: background-position;
+    }
+
+    #stars1 {
+      background-image: radial-gradient(1px 1px at 20px 30px, #eee, transparent),
+                        radial-gradient(1px 1px at 40px 70px, #fff, transparent),
+                        radial-gradient(1px 1px at 50px 160px, #ddd, transparent),
+                        radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                        radial-gradient(2px 2px at 130px 80px, #fff, transparent),
+                        radial-gradient(2px 2px at 160px 120px, #ddd, transparent);
+      background-size: 200px 200px;
+      animation: move-stars 120s linear infinite;
+    }
+
+    #stars2 {
+      background-image: radial-gradient(1px 1px at 10px 90px, #eee, transparent),
+                        radial-gradient(2px 2px at 30px 50px, #fff, transparent),
+                        radial-gradient(2px 2px at 110px 180px, #ddd, transparent),
+                        radial-gradient(1px 1px at 70px 10px, #fff, transparent),
+                        radial-gradient(2px 2px at 140px 60px, #fff, transparent),
+                        radial-gradient(1px 1px at 180px 100px, #ddd, transparent);
+      background-size: 300px 300px;
+      animation: move-stars 90s linear infinite;
+    }
+
+    #stars3 {
+      background-image: radial-gradient(2px 2px at 5px 150px, #eee, transparent),
+                        radial-gradient(3px 3px at 80px 20px, #fff, transparent),
+                        radial-gradient(1px 1px at 120px 140px, #ddd, transparent),
+                        radial-gradient(2px 2px at 60px 80px, #fff, transparent),
+                        radial-gradient(3px 3px at 170px 30px, #fff, transparent),
+                        radial-gradient(1px 1px at 190px 170px, #ddd, transparent);
+      background-size: 400px 400px;
+      animation: move-stars 60s linear infinite;
     }
 }
