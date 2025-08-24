@@ -11,6 +11,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { geminiPro } from '@genkit-ai/googleai';
 
 const ModerateConfessionInputSchema = z.object({
   text: z.string().describe('The confession text to be moderated.'),
@@ -31,6 +32,7 @@ export async function moderateConfession(input: ModerateConfessionInput): Promis
 
 const toxicityCheckPrompt = ai.definePrompt({
   name: 'toxicityCheckPrompt',
+  model: geminiPro,
   input: {schema: ModerateConfessionInputSchema},
   output: {schema: ModerateConfessionOutputSchema},
   prompt: `You are a content moderation tool that detects toxic content.
