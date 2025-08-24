@@ -374,5 +374,3 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
     </Card>
   );
 }
-
-  
