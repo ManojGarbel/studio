@@ -32,7 +32,7 @@ const Header = () => {
   }, []);
   
   useEffect(() => {
-    if (logoClickCount === 5) {
+    if (logoClickCount === 3) {
       router.push('/admin/login');
       setLogoClickCount(0); // Reset count
     }
