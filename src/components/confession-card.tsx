@@ -18,7 +18,7 @@ import {
   UserX,
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from './ui/avatar';
-import { useState, useTransition, useRef } from 'react';
+import { useState, useTransition, useRef, useEffect } from 'react';
 import {
   handleLike,
   handleDislike,
@@ -50,8 +50,12 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
   const [showComments, setShowComments] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   
-  // Use state to manage confession data to reflect UI changes instantly
   const [confession, setConfession] = useState(initialConfession);
+  
+  // Re-sync with server-provided props if they change
+  useEffect(() => {
+    setConfession(initialConfession);
+  }, [initialConfession]);
 
   const timeAgo = formatDistanceToNow(new Date(confession.timestamp), {
     addSuffix: true,
@@ -59,40 +63,58 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
 
   const onLike = () => {
     startTransition(async () => {
-      // Optimistic UI Update
-      const originalInteraction = confession.userInteraction;
-      const originalLikes = confession.likes;
-      
-      const newLikes = originalInteraction === 'like' ? originalLikes - 1 : originalLikes + 1;
-      const newInteraction = originalInteraction === 'like' ? null : 'like';
+      setConfession((prev) => {
+        const currentInteraction = prev.userInteraction;
+        let newLikes = prev.likes;
+        let newDislikes = prev.dislikes;
+        let newInteraction: 'like' | 'dislike' | null = 'like';
 
-      setConfession(prev => ({
-        ...prev,
-        likes: newLikes,
-        dislikes: originalInteraction === 'dislike' ? prev.dislikes - 1 : prev.dislikes,
-        userInteraction: newInteraction,
-      }));
+        if (currentInteraction === 'like') {
+          // Undo like
+          newLikes -= 1;
+          newInteraction = null;
+        } else if (currentInteraction === 'dislike') {
+          // Switch from dislike to like
+          newLikes += 1;
+          newDislikes -= 1;
+          newInteraction = 'like';
+        } else {
+          // New like
+          newLikes += 1;
+          newInteraction = 'like';
+        }
 
+        return { ...prev, likes: newLikes, dislikes: newDislikes, userInteraction: newInteraction };
+      });
       await handleLike(confession.id);
     });
   };
 
   const onDislike = () => {
     startTransition(async () => {
-      // Optimistic UI Update
-      const originalInteraction = confession.userInteraction;
-      const originalDislikes = confession.dislikes;
+      setConfession((prev) => {
+        const currentInteraction = prev.userInteraction;
+        let newLikes = prev.likes;
+        let newDislikes = prev.dislikes;
+        let newInteraction: 'like' | 'dislike' | null = 'dislike';
 
-      const newDislikes = originalInteraction === 'dislike' ? originalDislikes - 1 : originalDislikes + 1;
-      const newInteraction = originalInteraction === 'dislike' ? null : 'dislike';
+        if (currentInteraction === 'dislike') {
+          // Undo dislike
+          newDislikes -= 1;
+          newInteraction = null;
+        } else if (currentInteraction === 'like') {
+          // Switch from like to dislike
+          newDislikes += 1;
+          newLikes -= 1;
+          newInteraction = 'dislike';
+        } else {
+          // New dislike
+          newDislikes += 1;
+          newInteraction = 'dislike';
+        }
 
-      setConfession(prev => ({
-        ...prev,
-        dislikes: newDislikes,
-        likes: originalInteraction === 'like' ? prev.likes - 1 : prev.likes,
-        userInteraction: newInteraction,
-      }));
-
+        return { ...prev, likes: newLikes, dislikes: newDislikes, userInteraction: newInteraction };
+      });
       await handleDislike(confession.id);
     });
   };
@@ -121,7 +143,7 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
       const result = await addComment(confession.id, formData);
       if (result?.success) {
         formRef.current?.reset();
-        // Here you might want to re-fetch confessions to show the new comment
+        // The page will be revalidated by the server action
       } else if (result?.message) {
         toast({
           variant: 'destructive',
@@ -279,3 +301,5 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
     </Card>
   );
 }
+
+    

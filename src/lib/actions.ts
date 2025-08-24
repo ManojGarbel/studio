@@ -31,7 +31,6 @@ export async function getConfessions(): Promise<Confession[]> {
       post_interactions ( interaction_type )
     `
     )
-    .eq('post_interactions.user_anon_hash', anonHash) // Filter interactions by the current user
     .order('created_at', { ascending: false })
     .order('created_at', { foreignTable: 'comments', ascending: true });
 
@@ -41,25 +40,34 @@ export async function getConfessions(): Promise<Confession[]> {
   }
 
   // Map Supabase response to Confession type
-  return data.map((item: any) => ({
-    id: item.id,
-    text: item.text,
-    timestamp: new Date(item.created_at),
-    anonHash: item.anon_hash,
-    status: item.status,
-    likes: item.likes,
-    dislikes: item.dislikes,
-    comments: item.comments.map((c: any) => ({
-      id: c.id,
-      text: c.text,
-      timestamp: new Date(c.created_at),
-      anonHash: c.anon_hash,
-      isAuthor: c.is_author,
-    })),
-    // Determine the user's interaction from the filtered query result
-    userInteraction: item.post_interactions.length > 0 ? item.post_interactions[0].interaction_type : null
-  }));
+  const confessions = data.map((item: any) => {
+    // Manually filter interactions for the current user if anonHash is present
+    const userInteractions = anonHash
+      ? item.post_interactions.filter((pi: any) => pi.user_anon_hash === anonHash)
+      : [];
+
+    return {
+      id: item.id,
+      text: item.text,
+      timestamp: new Date(item.created_at),
+      anonHash: item.anon_hash,
+      status: item.status,
+      likes: item.likes,
+      dislikes: item.dislikes,
+      comments: item.comments.map((c: any) => ({
+        id: c.id,
+        text: c.text,
+        timestamp: new Date(c.created_at),
+        anonHash: c.anon_hash,
+        isAuthor: c.is_author,
+      })),
+      userInteraction: userInteractions.length > 0 ? userInteractions[0].interaction_type : null,
+    } as Confession;
+  });
+
+  return confessions;
 }
+
 
 export async function getAllConfessionsForAdmin(): Promise<Confession[]> {
   const cookieStore = cookies();
@@ -300,7 +308,7 @@ async function handleInteraction(
     return { success: false, message: 'User not authenticated.' };
   }
 
-  // 1. Check for existing interaction by this user on this post
+  // 1. Check for an existing interaction by this user on this post
   const { data: existingInteraction, error: fetchError } = await supabase
     .from('post_interactions')
     .select('*')
@@ -311,13 +319,14 @@ async function handleInteraction(
   if (fetchError && fetchError.code !== 'PGRST116') {
     // PGRST116 means no rows found, which is fine.
     console.error('Error fetching interaction:', fetchError);
-    return { success: false, message: 'Database error.' };
+    return { success: false, message: 'Database error fetching interaction.' };
   }
 
-  const trx = supabase.rpc; // Using rpc for transaction-like behavior
-
   if (existingInteraction) {
-    // 2. User is changing or removing their interaction
+    // Scenario 1: User is removing or changing their interaction
+    const isSameInteraction = existingInteraction.interaction_type === interactionType;
+
+    // First, delete the old interaction record
     const { error: deleteError } = await supabase
       .from('post_interactions')
       .delete()
@@ -325,19 +334,19 @@ async function handleInteraction(
 
     if (deleteError) {
         console.error('Error deleting interaction:', deleteError);
-        return { success: false, message: 'Database error.' };
+        return { success: false, message: 'Database error deleting interaction.' };
     }
 
-    // Decrement the old count
+    // Decrement the old count (e.g., remove their like)
     if (existingInteraction.interaction_type === 'like') {
         await supabase.rpc('decrement_count', { row_id: confessionId, column_name: 'likes' });
     } else {
         await supabase.rpc('decrement_count', { row_id: confessionId, column_name: 'dislikes' });
     }
-    
 
-    if (existingInteraction.interaction_type !== interactionType) {
-      // 2a. User is switching from like to dislike, or vice-versa
+    if (!isSameInteraction) {
+      // Scenario 1a: User is switching vote (e.g., from like to dislike)
+      // We've already removed the old vote, now add the new one.
       const { error: insertError } = await supabase
         .from('post_interactions')
         .insert({
@@ -345,9 +354,10 @@ async function handleInteraction(
           user_anon_hash: anonHash,
           interaction_type: interactionType,
         });
+
        if (insertError) {
             console.error('Error inserting new interaction:', insertError);
-            return { success: false, message: 'Database error.' };
+            return { success: false, message: 'Database error inserting new interaction.' };
        }
        // Increment the new count
         if (interactionType === 'like') {
@@ -356,9 +366,10 @@ async function handleInteraction(
             await supabase.rpc('increment_count', { row_id: confessionId, column_name: 'dislikes' });
         }
     }
-    // 2b. If it was the same interaction type, we've already deleted it, so it's just an "undo".
+    // Scenario 1b: User is undoing their vote. We've deleted it, so we're done.
+
   } else {
-    // 3. User is adding a new interaction
+    // Scenario 2: User is adding a new interaction to a post they haven't interacted with
     const { error: insertError } = await supabase
       .from('post_interactions')
       .insert({
@@ -366,11 +377,12 @@ async function handleInteraction(
         user_anon_hash: anonHash,
         interaction_type: interactionType,
       });
+
     if (insertError) {
         console.error('Error inserting new interaction:', insertError);
-        return { success: false, message: 'Database error.' };
+        return { success: false, message: 'Database error on new interaction.' };
     }
-    // Increment the count
+    // Increment the new count
     if (interactionType === 'like') {
         await supabase.rpc('increment_count', { row_id: confessionId, column_name: 'likes' });
     } else {
