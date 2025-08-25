@@ -1,4 +1,3 @@
-
 'use client';
 
 import ConfessionForm from '@/components/confession-form';
@@ -17,9 +16,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
 
-
   useEffect(() => {
-    // Check if it's the user's first visit
+    // Show InfoDialog only on first visit
     const hasVisited = localStorage.getItem('hasVisitedConfessCode');
     if (!hasVisited) {
       setIsInfoOpen(true);
@@ -40,56 +38,65 @@ export default function Home() {
     };
 
     fetchConfessionsAndStatus();
-    
-    // Set up an interval to check for cookie changes and fetch new confessions
-    // This provides a basic real-time feel
+
+    // Refresh confessions periodically
     const interval = setInterval(() => {
       const isActivated = Cookies.get('is_activated') === 'true';
       if (isActivated !== activated) {
         setActivated(isActivated);
       }
       fetchConfessionsAndStatus();
-    }, 5000); // Refresh every 5 seconds
+    }, 5000);
 
     return () => clearInterval(interval);
 
   }, [activated]);
 
   if (loading) {
-      return (
-          <div className="container max-w-2xl mx-auto py-12 px-4 text-center">
-              <p>Loading confessions...</p>
-          </div>
-      )
+    return (
+      <div className="container max-w-2xl mx-auto py-16 px-4 text-center font-mono">
+        <p className="glitch text-lg" data-text="booting::confessCode">
+          booting::confessCode
+        </p>
+        <p className="cursor-blink mt-2 text-muted-foreground">
+          initializing system modules...
+        </p>
+      </div>
+    );
   }
 
   return (
     <>
       <InfoDialog open={isInfoOpen} onOpenChange={setIsInfoOpen} />
-      <div className="container max-w-2xl mx-auto py-6 px-4">
-        <div className="flex flex-col gap-8">
+      <div className="container max-w-2xl mx-auto py-8 px-4">
+        <div className="flex flex-col gap-10">
+
+          {/* 🚀 Show Confession Form if Activated */}
           {activated ? (
             <ConfessionForm />
           ) : (
-            <div className="text-center bg-card border border-primary/20 rounded-lg p-8 shadow-lg shadow-primary/10">
-              <h2 className="text-xl font-semibold mb-2 text-primary">Activate Your Account</h2>
-              <p className="text-muted-foreground mb-4">
-                Please activate your account to start sharing confessions.
+            <div className="text-center bg-muted/30 border border-destructive/50 rounded-lg p-8 shadow-[0_0_12px_rgba(255,0,70,0.2)]">
+              <h2 className="glitch text-xl mb-2" data-text="system::locked">
+                system::locked
+              </h2>
+              <p className="text-muted-foreground mb-4 font-mono">
+                activate your account to start submitting confessions ▍
               </p>
-              <Button asChild>
-                <Link href="/activate">Start Confessing</Link>
+              <Button asChild className="btn-hacker">
+                <Link href="/activate">&gt; start_confessing()</Link>
               </Button>
             </div>
           )}
 
+          {/* 📜 Confession Feed */}
           <div className="flex flex-col gap-6">
             {confessions.length > 0 ? (
               confessions.map((confession) => (
                 <ConfessionCard key={confession.id} confession={confession} />
               ))
             ) : (
-              <div className="text-center text-muted-foreground py-12">
-                <p>No confessions yet. Be the first to share one!</p>
+              <div className="text-center text-muted-foreground py-12 font-mono">
+                <p>log::no_confessions_found()</p>
               </div>
             )}
           </div>

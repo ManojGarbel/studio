@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -24,55 +23,75 @@ export default function InfoDialog({ open, onOpenChange }: InfoDialogProps) {
   const playOpenSound = useSound(SOUNDS.dialogOpen, 0.2);
 
   useEffect(() => {
-    if(open) {
+    if (open) {
       playOpenSound();
     }
   }, [open, playOpenSound]);
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md md:max-w-lg">
+      <DialogContent className="max-w-lg bg-black/90 border border-accent/40 shadow-[0_0_25px_#39ff14] text-foreground scanlines font-mono">
+        {/* 🖥 Header */}
         <DialogHeader>
-          <DialogTitle className="text-2xl text-primary font-code">
-            Welcome to &lt;ConfessCode/&gt;
+          <DialogTitle className="glitch text-2xl font-code text-accent">
+            &lt;ConfessCode Terminal/&gt;
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground pt-2">
-            Your anonymous hub for sharing coding confessions.
+          <DialogDescription className="text-muted-foreground text-sm cursor-blink">
+            _loading instructions...
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[60vh] pr-4">
-            <div className="space-y-4 text-foreground/90 font-code text-sm">
-            <h3 className="font-bold text-accent text-lg">What is this?</h3>
-            <p>
-                ConfessCode is a safe space for developers to anonymously share their
-                coding mistakes, silly errors, and workplace stories. Ever pushed to the wrong branch on a Friday? Or spent hours debugging a typo? This is the place to share it.
-            </p>
 
-            <h3 className="font-bold text-accent text-lg">How it Works</h3>
-            <p>
-                1. <strong>Activate:</strong> Use the one-time activation key ('WELCOME') to create your anonymous identity.
-                <br/>
-                2. <strong>Confess:</strong> Share your story. Your post will be sent for a quick moderation check to filter out spam or harmful content.
-                <br/>
-                3. <strong>Engage:</strong> Read, like, and comment on other confessions.
-            </p>
-            
-            <h3 className="font-bold text-accent text-lg">Why is it Anonymous?</h3>
-            <p>
-                Your privacy is paramount. When you activate, we generate a random, unique hash (e.g., `usr_anon::a1b2c3`) that is only stored in your browser's cookies. We do not link this hash to your IP address, email, or any other personal information. This hash ensures you have a consistent identity for commenting on your own posts without revealing who you are.
-            </p>
+        {/* 📜 Scrollable Content */}
+        <ScrollArea className="max-h-[60vh] pr-4 mt-4">
+          <div className="space-y-6 text-sm leading-relaxed">
+            <section>
+              <h3 className="text-keyword font-bold text-lg">What is this?</h3>
+              <p className="text-default">
+                ConfessCode is a <span className="text-string">safe space</span> for devs to anonymously
+                share their coding sins, bugs, and late-night
+                <span className="text-number"> coffee-driven commits</span>.
+              </p>
+            </section>
 
-            <h3 className="font-bold text-accent text-lg">Terms & Conditions</h3>
-            <ul className="list-disc list-inside space-y-2">
-                <li><strong>Be Respectful:</strong> Do not post hateful, discriminatory, or harassing content. Personal attacks are not tolerated.</li>
-                <li><strong>No Personal Info:</strong> Do not share any Personally Identifiable Information (PII) about yourself or others. This includes names, emails, phone numbers, or specific company details that could identify someone.</li>
-                <li><strong>Content Moderation:</strong> All submissions are reviewed by an admin. Submissions that violate these terms will be rejected. Egregious or repeated violations may result in your anonymous hash being banned.</li>
-                <li><strong>No Guarantees:</strong> This is a hobby project. While we prioritize privacy, use it at your own risk.</li>
-            </ul>
-            </div>
+            <section>
+              <h3 className="text-keyword font-bold text-lg">How it Works</h3>
+              <pre className="bg-secondary/20 border border-secondary/40 rounded p-3 text-sm text-default">
+{`1. Activate   -> use key 'WELCOME' to spawn anon_id;
+2. Confess    -> submit story(); // sent for review
+3. Engage     -> like(), comment(), share();`}
+              </pre>
+            </section>
+
+            <section>
+              <h3 className="text-keyword font-bold text-lg">Why Anonymous?</h3>
+              <p>
+                Your identity = <span className="text-string">anon_hash()</span>.  
+                Stored only in <span className="text-tag">cookies</span>, never linked
+                to <span className="text-number">IP / email / login</span>.  
+                You stay safe & untraceable 🕶️.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="text-keyword font-bold text-lg">Terms & Conditions</h3>
+              <ul className="list-disc list-inside space-y-1 text-default">
+                <li><span className="text-string">Respect()</span> → No hate / abuse / harassment.</li>
+                <li><span className="text-string">NoPII()</span> → Don’t leak names, emails, numbers.</li>
+                <li><span className="text-string">Moderation()</span> → All posts reviewed by admin.</li>
+                <li><span className="text-string">Disclaimer()</span> → hobby project, use at own risk.</li>
+              </ul>
+            </section>
+          </div>
         </ScrollArea>
+
+        {/* 🚀 Footer */}
         <DialogFooter>
-          <Button onClick={() => onOpenChange(false)}>I Understand</Button>
+          <Button
+            onClick={() => onOpenChange(false)}
+            className="btn-hacker"
+          >
+            I Understand
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
