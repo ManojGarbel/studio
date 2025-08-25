@@ -1,3 +1,4 @@
+
 'use client';
 
 import ConfessionForm from '@/components/confession-form';
@@ -65,7 +66,7 @@ export default function Home() {
   return (
     <>
       <InfoDialog open={isInfoOpen} onOpenChange={setIsInfoOpen} />
-      <div className="container max-w-2xl mx-auto py-12 px-4">
+      <div className="container max-w-2xl mx-auto py-6 px-4">
         <div className="flex flex-col gap-8">
           {activated ? (
             <ConfessionForm />

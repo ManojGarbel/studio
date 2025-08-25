@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -120,42 +121,52 @@ const Header = () => {
                 </div>
               </Link>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsInfoOpen(true)}
-              aria-label="Information"
-              className="hover:text-accent hover:shadow-[0_0_20px_theme(colors.accent)]"
-            >
-              <Info />
-            </Button>
-            {installPrompt && (
-               <Button
+          <div className="flex items-center gap-1">
+             {isActivated && anonHash ? (
+              <div className="md:hidden flex items-center gap-2 text-xs md:text-sm font-mono text-cyan-400 bg-black/50 border border-cyan-400/30 px-2 py-1.5 rounded-md shadow-md shadow-cyan-400/10">
+                <User className="h-4 w-4 text-cyan-400" />
+                <span>{anonHash.substring(0, 4)}</span>
+              </div>
+            ) : null}
+            <div className="flex items-center gap-1">
+                <Button
                   variant="ghost"
                   size="icon"
-                  onClick={handleInstallClick}
-                  aria-label="Install App"
-                  title="Install ConfessCode"
+                  onClick={() => setIsInfoOpen(true)}
+                  aria-label="Information"
                   className="hover:text-accent hover:shadow-[0_0_20px_theme(colors.accent)]"
                 >
-                  <Download />
+                  <Info />
                 </Button>
-            )}
-            {isActivated && anonHash ? (
-              <div className="hidden md:flex items-center gap-2 text-xs md:text-sm font-mono text-cyan-400 bg-black/50 border border-cyan-400/30 px-3 py-1.5 rounded-md shadow-md shadow-cyan-400/10">
+                {installPrompt && (
+                  <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleInstallClick}
+                      aria-label="Install App"
+                      title="Install ConfessCode"
+                      className="hover:text-accent hover:shadow-[0_0_20px_theme(colors.accent)]"
+                    >
+                      <Download />
+                    </Button>
+                )}
+            </div>
+          </div>
+        </div>
+         <div className="container max-w-2xl mx-auto px-4 pb-2 md:pb-0">
+             {isActivated && anonHash ? (
+              <div className="hidden md:flex items-center gap-2 text-xs md:text-sm font-mono text-cyan-400 bg-black/50 border border-cyan-400/30 px-3 py-1.5 rounded-md shadow-md shadow-cyan-400/10 mb-2 w-fit">
                 <User className="h-4 w-4 text-cyan-400" />
                 <span>usr_anon::{anonHash.substring(0, 6)}</span>
               </div>
             ) : (
-              <Button asChild variant="outline" className="hidden md:inline-flex">
+              <Button asChild variant="outline" className="hidden md:inline-flex mb-2">
                 <Link href="/activate">
                   <Power className="mr-2" />
                   Activate
                 </Link>
               </Button>
             )}
-          </div>
         </div>
       </header>
       <InfoDialog open={isInfoOpen} onOpenChange={setIsInfoOpen} />
