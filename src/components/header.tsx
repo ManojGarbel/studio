@@ -92,13 +92,12 @@ const Header = () => {
                     <h1 className="font-code tracking-tighter">
                     <TypeAnimation
                         sequence={[
-                            'Confess @ <ConfessCode/>', 2000,
+                            'Confession @ <ConfessCode/>', 2000,
                             'Spill @ <ConfessCode/>', 2000,
                             'Secret @ <ConfessCode/>', 2000,
                             'Whisper @ <ConfessCode/>', 2000,
                             'Expose @ <ConfessCode/>', 2000,
                             'Reveal @ <ConfessCode/>', 2000,
-                            'Confession @ <ConfessCode/>', 2000,
                             'Truth @ <ConfessCode/>', 2000,
                             'Dump @ <ConfessCode/>', 2000,
                             'Unmask @ <ConfessCode/>', 2000,
