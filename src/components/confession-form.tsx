@@ -74,7 +74,7 @@ export default function ConfessionForm() {
         {/* 🖥 Header */}
         <CardHeader>
           <CardTitle className="glitch text-accent text-xl">
-            terminal::confession_input
+            Confession Now 
           </CardTitle>
           <CardDescription className="text-muted-foreground cursor-blink">
             _type your secret below and hit enter...
