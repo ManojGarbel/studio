@@ -74,7 +74,7 @@ export default function ConfessionForm() {
         {/* 🖥 Header */}
         <CardHeader>
           <CardTitle className="glitch text-accent text-xl">
-            Confession Now 
+            Confess Now 
           </CardTitle>
           <CardDescription className="text-muted-foreground cursor-blink">
             _type your secret below and hit enter...
@@ -85,7 +85,7 @@ export default function ConfessionForm() {
         <CardContent>
           <Textarea
             name="confession"
-            placeholder="> I once pushed to main on a Friday night..."
+            placeholder="> mera best friend gay hai"
             rows={5}
             required
             minLength={10}
