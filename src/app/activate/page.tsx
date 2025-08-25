@@ -107,10 +107,10 @@ export default function ActivatePage() {
               className="glitch text-xl"
               data-text="system::activation"
             >
-              system::activation
+              Activate Your Account 
             </CardTitle>
             <CardDescription className="cursor-blink">
-               enter secret access key to continue
+               enter secret access key ('WELCOME') to continue
             </CardDescription>
           </CardHeader>
 
