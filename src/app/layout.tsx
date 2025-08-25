@@ -1,22 +1,22 @@
 import type { Metadata, Viewport } from 'next';
-import { Barlow, Monoton } from 'next/font/google';
+import { Inter, Source_Code_Pro } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/header';
 import Link from 'next/link';
 
-const fontBody = Barlow({
+const fontBody = Inter({
   subsets: ['latin'],
   variable: '--font-body',
-  weight: ['400', '500', '600', '700'],
 });
 
-const fontCode = Monoton({
+const fontCode = Source_Code_Pro({
   subsets: ['latin'],
   variable: '--font-code',
-  weight: '400',
+  weight: ['400', '600', '700'],
 });
+
 
 export const metadata: Metadata = {
   title: '<ConfessCode/>',
