@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -122,6 +121,15 @@ const Header = () => {
               </Link>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsInfoOpen(true)}
+              aria-label="Information"
+              className="hover:text-accent hover:shadow-[0_0_20px_theme(colors.accent)]"
+            >
+              <Info />
+            </Button>
             {installPrompt && (
                <Button
                   variant="ghost"
@@ -134,15 +142,6 @@ const Header = () => {
                   <Download />
                 </Button>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsInfoOpen(true)}
-              aria-label="Information"
-              className="hover:text-accent hover:shadow-[0_0_20px_theme(colors.accent)]"
-            >
-              <Info />
-            </Button>
             {isActivated && anonHash ? (
               <div className="hidden md:flex items-center gap-2 text-xs md:text-sm font-mono text-cyan-400 bg-black/50 border border-cyan-400/30 px-3 py-1.5 rounded-md shadow-md shadow-cyan-400/10">
                 <User className="h-4 w-4 text-cyan-400" />
