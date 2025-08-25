@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import {
@@ -39,6 +38,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical } from 'lucide-react';
 import Cookies from 'js-cookie';
+import useSound from '@/hooks/use-sound';
+import { SOUNDS } from '@/lib/sounds';
 
 
 interface ConfessionCardProps {
@@ -107,6 +108,11 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
   const [confession, setConfession] = useState(initialConfession);
   const [currentUserAnonHash, setCurrentUserAnonHash] = useState<string | undefined>(undefined);
 
+  const playLikeSound = useSound(SOUNDS.like, 0.2);
+  const playDislikeSound = useSound(SOUNDS.dislike, 0.2);
+  const playCommentSound = useSound(SOUNDS.comment);
+  const playReportSound = useSound(SOUNDS.report);
+
   useEffect(() => {
     setCurrentUserAnonHash(Cookies.get('anon_hash'));
   }, []);
@@ -159,6 +165,7 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
 
 
   const onLike = () => {
+    playLikeSound();
     startTransition(async () => {
       setConfession((prev) => {
         const currentInteraction = prev.userInteraction;
@@ -188,6 +195,7 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
   };
 
   const onDislike = () => {
+    playDislikeSound();
     startTransition(async () => {
       setConfession((prev) => {
         const currentInteraction = prev.userInteraction;
@@ -217,6 +225,7 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
   };
 
   const onReport = (id: string, type: 'confession' | 'comment') => {
+    playReportSound();
     startTransition(async () => {
       const action = type === 'confession' ? reportConfession : reportComment;
       const result = await action(id);
@@ -236,6 +245,7 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
   };
 
   const handleCommentSubmit = async (formData: FormData) => {
+    playCommentSound();
     startTransition(async () => {
       const result = await addComment(confession.id, formData);
       if (result?.success) {
@@ -400,5 +410,3 @@ export function ConfessionCard({ confession: initialConfession }: ConfessionCard
     </Card>
   );
 }
-
-    

@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -10,6 +11,9 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
+import useSound from '@/hooks/use-sound';
+import { SOUNDS } from '@/lib/sounds';
+import { useEffect } from 'react';
 
 interface InfoDialogProps {
   open: boolean;
@@ -17,6 +21,14 @@ interface InfoDialogProps {
 }
 
 export default function InfoDialog({ open, onOpenChange }: InfoDialogProps) {
+  const playOpenSound = useSound(SOUNDS.dialogOpen, 0.2);
+
+  useEffect(() => {
+    if(open) {
+      playOpenSound();
+    }
+  }, [open, playOpenSound]);
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md md:max-w-lg">

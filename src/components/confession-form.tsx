@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useActionState } from 'react';
@@ -18,6 +19,8 @@ import { submitConfession } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { AlertCircle, Send } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import useSound from '@/hooks/use-sound';
+import { SOUNDS } from '@/lib/sounds';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -64,10 +67,12 @@ export default function ConfessionForm() {
     success: false,
   });
   const formRef = useRef<HTMLFormElement>(null);
+  const playSubmitSound = useSound(SOUNDS.submit);
 
   useEffect(() => {
     if (state.message) {
       if (state.success) {
+        playSubmitSound();
         toast({
           title: 'Success!',
           description: state.message,
@@ -81,7 +86,7 @@ export default function ConfessionForm() {
         });
       }
     }
-  }, [state, toast]);
+  }, [state, toast, playSubmitSound]);
 
   return (
     <Card>

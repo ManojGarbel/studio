@@ -1,3 +1,4 @@
+
 "use client"
 
 // Inspired by react-hot-toast library
@@ -7,6 +8,7 @@ import type {
   ToastActionElement,
   ToastProps,
 } from "@/components/ui/toast"
+import { SOUNDS } from "@/lib/sounds"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
@@ -31,6 +33,18 @@ function genId() {
   count = (count + 1) % Number.MAX_SAFE_INTEGER
   return count.toString()
 }
+
+// Store sound instances globally to avoid re-creating them
+let notificationSound: HTMLAudioElement | null = null;
+let errorSound: HTMLAudioElement | null = null;
+
+if (typeof window !== 'undefined') {
+  notificationSound = new Audio(SOUNDS.notification);
+  notificationSound.volume = 0.3;
+  errorSound = new Audio(SOUNDS.error);
+  errorSound.volume = 0.3;
+}
+
 
 type ActionType = typeof actionTypes
 
@@ -151,6 +165,14 @@ function toast({ ...props }: Toast) {
       toast: { ...props, id },
     })
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
+
+  if (props.variant === 'destructive' && errorSound) {
+    errorSound.currentTime = 0;
+    errorSound.play();
+  } else if (notificationSound) {
+    notificationSound.currentTime = 0;
+    notificationSound.play();
+  }
 
   dispatch({
     type: "ADD_TOAST",

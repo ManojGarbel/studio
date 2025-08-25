@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useActionState } from 'react';
@@ -19,6 +20,8 @@ import { Input } from '@/components/ui/input';
 import { activateAccount } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { KeyRound } from 'lucide-react';
+import useSound from '@/hooks/use-sound';
+import { SOUNDS } from '@/lib/sounds';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -67,6 +70,7 @@ export default function ActivatePage() {
     anonHash: null,
   });
   const formRef = useRef<HTMLFormElement>(null);
+  const playSuccessSound = useSound(SOUNDS.notification);
 
   useEffect(() => {
     // This effect runs when the 'state' object from the server action changes.
@@ -74,7 +78,8 @@ export default function ActivatePage() {
       // Set cookies on the client side for immediate UI update across the app.
       Cookies.set('is_activated', 'true', { expires: 365 });
       Cookies.set('anon_hash', state.anonHash, { expires: 365 });
-
+      
+      playSuccessSound();
       toast({
         title: 'Success!',
         description: state.message,
@@ -95,7 +100,7 @@ export default function ActivatePage() {
         description: state.message,
       });
     }
-  }, [state, toast, router]);
+  }, [state, toast, router, playSuccessSound]);
 
   return (
     <div className="container max-w-lg mx-auto py-12 px-4">
