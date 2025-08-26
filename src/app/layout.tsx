@@ -62,7 +62,7 @@ export default function RootLayout({
           <p className="text-xs font-mono text-muted-foreground cursor-blink">
             &gt; crafted by{" "}
             <a
-              href="https://hakkan.me"
+              href="https://www.github.com/HakkanShah"
               target="_blank"
               rel="noopener noreferrer"
               className="underline decoration-dotted hover:text-primary transition-colors"
