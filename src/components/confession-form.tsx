@@ -98,10 +98,10 @@ export default function ConfessionForm() {
           <CardHeader className="px-4 pb-2 pt-4 text-center">
             <CardTitle className="glitch flex items-center justify-center gap-2 text-xl text-accent sm:text-2xl">
               <Terminal className="h-5 w-5" />
-              <span>New Transmission</span>
+              <span>Confess now</span>
             </CardTitle>
             <CardDescription className="cursor-blink text-xs text-muted-foreground sm:text-sm">
-              root@dev:~# post_confession
+              just write your confession and hit enter
             </CardDescription>
           </CardHeader>
 
