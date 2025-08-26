@@ -93,7 +93,7 @@
 
   /* Syntax Highlight (terminal style) */
   .text-keyword { color: #38bdf8; } /* sky blue */
-  .text-string  { color: #a3e635; } /* lime */
+  .text-string  { color: #1788f9; } /* lime */
   .text-number  { color: #c084fc; } /* violet */
   .text-tag     { color: #f472b6; } /* pink */
   .text-default { color: #e5e7eb; }

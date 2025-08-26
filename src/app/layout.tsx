@@ -51,29 +51,36 @@ export default function RootLayout({
         <Header />
 
         {/* 📜 Main Content */}
-        <main className="flex-1 w-full relative z-10 pt-24 pb-24">
+        <main className="flex-1 w-full relative z-10 pt-24 pb-12">
           <div className="container max-w-2xl mx-auto px-4">
             {children}
           </div>
         </main>
 
-        {/* ⚡ Hacker Footer (floating bar) */}
-        <footer className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-2xl rounded-2xl bg-background/80 backdrop-blur-md border border-cyan-400/40 shadow-[0_0_20px_rgba(0,255,255,0.25)] px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-2">
-          <p className="text-xs font-mono text-muted-foreground cursor-blink">
-            &gt; crafted by{" "}
-            <a
-              href="https://www.github.com/HakkanShah"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline decoration-dotted hover:text-primary transition-colors"
-            >
-              Hakkan
-            </a>
-          </p>
-          <p className="text-[10px] text-muted-foreground font-mono opacity-70">
-            system@v1.0.0 &nbsp;|&nbsp; status::online
-          </p>
-        </footer>
+        {/* ⚡ Hacker Footer (Enhanced) */}
+        <footer className="w-full fixed bottom-0 left-0 z-10 
+  flex items-center justify-between gap-4
+  max-w-2xl mx-auto px-5 py-3 
+  rounded-t-2xl bg-background/80 backdrop-blur-sm
+  border-t border-accent/30">
+  
+  <p className="text-xs font-mono text-muted-foreground truncate">
+    &gt; crafted by{" "}
+    <a
+      href="https://github.com/HakkanShah"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="underline decoration-dotted hover:text-primary transition-colors"
+    >
+      Hakkan
+    </a>
+  </p>
+
+  <p className="text-[11px] text-muted-foreground font-mono opacity-70 whitespace-nowrap">
+    v1.0.0&nbsp;|&nbsp;online
+  </p>
+</footer>
+
 
         {/* 🔔 Toast Notifications */}
         <Toaster />

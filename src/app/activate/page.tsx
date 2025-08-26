@@ -115,7 +115,7 @@ export default function ActivatePage() {
               className="glitch text-xl text-accent font-mono"
               data-text="system::activation"
             >
-              system::activation
+              system:activation
             </CardTitle>
             <CardDescription className="cursor-blink text-xs font-mono mt-1">
               &gt; enter secret access key: <span className="text-accent">'WELCOME'</span>

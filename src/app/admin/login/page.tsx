@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,11 @@ import { authenticateAdmin } from '@/lib/actions';
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending} className="w-full">
+    <Button
+      type="submit"
+      disabled={pending}
+      className="w-full bg-gradient-to-r from-purple-600 via-pink-500 to-red-500 text-white hover:opacity-90 transition rounded-xl shadow-lg"
+    >
       {pending ? (
         <>
           <svg
@@ -66,42 +70,43 @@ export default function AdminLoginPage() {
   });
   const formRef = useRef<HTMLFormElement>(null);
 
-  useEffect(() => {
-    if (state.success) {
-      toast({
-        title: 'Success!',
-        description: state.message,
-      });
-      router.push('/admin');
-    } else if (state.message) {
-      toast({
-        variant: 'destructive',
-        title: 'Authentication Error',
-        description: state.message,
-      });
-    }
-  }, [state, toast, router]);
+  if (state.success) {
+    toast({
+      title: '✅ Success!',
+      description: state.message,
+    });
+    router.push('/admin');
+  } else if (state.message) {
+    toast({
+      variant: 'destructive',
+      title: '❌ Authentication Failed',
+      description: state.message,
+    });
+  }
 
   return (
-    <div className="container max-w-sm mx-auto py-12 px-4 flex items-center min-h-[80vh]">
-      <Card className="w-full">
-        <form action={formAction} ref={formRef}>
-          <CardHeader className="text-center">
-            <CardTitle>Admin Access</CardTitle>
-            <CardDescription>
-              Enter the secret key to access the dashboard.
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-800 p-4">
+      <Card className="w-full max-w-md backdrop-blur-md bg-white/10 border border-white/20 shadow-2xl rounded-2xl">
+        <form action={formAction} ref={formRef} className="p-6 space-y-6">
+          <CardHeader className="text-center space-y-2">
+            <CardTitle className="text-2xl font-bold text-white">
+              🔑 Admin Access
+            </CardTitle>
+            <CardDescription className="text-gray-300">
+              Enter your secret key to unlock the dashboard
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Input
               name="secretKey"
               type="password"
-              placeholder="Enter your secret key"
+              placeholder="Enter secret key"
+              className="bg-black/40 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500"
               required
             />
           </CardContent>
           <CardFooter>
-             <SubmitButton />
+            <SubmitButton />
           </CardFooter>
         </form>
       </Card>
