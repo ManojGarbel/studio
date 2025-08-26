@@ -18,7 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { activateAccount } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
-import { KeyRound } from "lucide-react";
+import { KeyRound, Terminal } from "lucide-react";
 import useSound from "@/hooks/use-sound";
 import { SOUNDS } from "@/lib/sounds";
 
@@ -26,9 +26,14 @@ import { SOUNDS } from "@/lib/sounds";
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending} className="btn-hacker w-full">
+    <Button
+      type="submit"
+      disabled={pending}
+      className="btn-hacker w-full group relative overflow-hidden"
+    >
       {pending ? (
         <>
+          <span className="absolute inset-0 animate-pulse bg-accent/10" />
           <svg
             className="animate-spin -ml-1 mr-3 h-5 w-5 text-accent"
             xmlns="http://www.w3.org/2000/svg"
@@ -56,7 +61,7 @@ function SubmitButton() {
         </>
       ) : (
         <>
-          <KeyRound className="mr-2 h-4 w-4" />
+          <KeyRound className="mr-2 h-4 w-4 animate-pulse" />
           access system
         </>
       )}
@@ -99,32 +104,41 @@ export default function ActivatePage() {
   }, [state, toast, router, playSuccessSound]);
 
   return (
-    <div className="container max-w-lg mx-auto py-12 px-4">
-      <Card className="bg-background border border-border shadow-[0_0_12px_rgba(0,255,255,0.25)] scanlines">
-        <form action={formAction} ref={formRef}>
+    <div className="container max-w-lg mx-auto py-20 px-4 relative z-10">
+      <Card className="bg-background/80 backdrop-blur-md border border-cyan-400/40 shadow-[0_0_15px_rgba(0,255,255,0.3)] rounded-2xl overflow-hidden relative">
+        {/* 💡 Decorative top neon bar */}
+        <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-pulse" />
+
+        <form action={formAction} ref={formRef} className="relative z-10">
           <CardHeader>
             <CardTitle
-              className="glitch text-xl"
+              className="glitch text-xl text-accent font-mono"
               data-text="system::activation"
             >
               system::activation
             </CardTitle>
-            <CardDescription className="cursor-blink">
-               enter secret access key ('WELCOME') to continue
+            <CardDescription className="cursor-blink text-xs font-mono mt-1">
+              &gt; enter secret access key: <span className="text-accent">'WELCOME'</span>
             </CardDescription>
           </CardHeader>
 
           <CardContent>
-            <Input
-              name="activationKey"
-              placeholder="> ********"
-              required
-              className="bg-muted text-foreground border border-border focus:ring-accent font-mono"
-            />
+            <div className="relative">
+              <Terminal className="absolute left-2 top-2.5 h-4 w-4 text-accent opacity-80" />
+              <Input
+                name="activationKey"
+                placeholder="> ********"
+                required
+                className="bg-black/50 pl-8 text-accent font-mono border border-cyan-400/40 focus:ring-1 focus:ring-accent rounded-lg"
+              />
+            </div>
           </CardContent>
 
           <CardFooter className="flex-col items-stretch gap-4">
             <SubmitButton />
+            <p className="text-[10px] font-mono text-muted-foreground text-center">
+              _sys-> unauthorized access will be logged
+            </p>
           </CardFooter>
         </form>
       </Card>

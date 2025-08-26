@@ -30,22 +30,33 @@ export default function InfoDialog({ open, onOpenChange }: InfoDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg bg-black/90 border border-accent/40 shadow-[0_0_25px_#39ff14] text-foreground scanlines font-mono">
+      <DialogContent
+        className="
+          w-[95vw] sm:w-full 
+          max-w-md sm:max-w-lg md:max-w-xl
+          max-h-[80vh]
+          bg-black/90 border border-accent/40 
+          shadow-[0_0_25px_#39ff14] 
+          text-foreground scanlines font-mono
+          overflow-hidden
+          px-3 sm:px-6 py-4
+        "
+      >
         {/* 🖥 Header */}
         <DialogHeader>
-          <DialogTitle className="glitch text-2xl font-code text-accent">
+          <DialogTitle className="glitch text-xl sm:text-2xl font-code text-accent text-center sm:text-left">
             &lt;ConfessCode Terminal/&gt;
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground text-sm cursor-blink">
+          <DialogDescription className="text-muted-foreground text-xs sm:text-sm cursor-blink text-center sm:text-left">
             _loading instructions...
           </DialogDescription>
         </DialogHeader>
 
         {/* 📜 Scrollable Content */}
-        <ScrollArea className="max-h-[60vh] pr-4 mt-4">
+        <ScrollArea className="max-h-[55vh] sm:max-h-[60vh] mt-4 pr-2 sm:pr-4">
           <div className="space-y-6 text-sm leading-relaxed">
             <section>
-              <h3 className="text-keyword font-bold text-lg">What is this?</h3>
+              <h3 className="text-keyword font-bold text-base sm:text-lg">What is this?</h3>
               <p className="text-default">
                 ConfessCode is a <span className="text-string">safe space</span> for devs to anonymously
                 share their coding sins, bugs, and late-night
@@ -54,8 +65,8 @@ export default function InfoDialog({ open, onOpenChange }: InfoDialogProps) {
             </section>
 
             <section>
-              <h3 className="text-keyword font-bold text-lg">How it Works</h3>
-              <pre className="bg-secondary/20 border border-secondary/40 rounded p-3 text-sm text-default">
+              <h3 className="text-keyword font-bold text-base sm:text-lg">How it Works</h3>
+              <pre className="bg-secondary/20 border border-secondary/40 rounded p-3 text-xs sm:text-sm text-default whitespace-pre-wrap">
 {`1. Activate   -> use key 'WELCOME' to spawn anon_id;
 2. Confess    -> submit story(); // sent for review
 3. Engage     -> like(), comment(), share();`}
@@ -63,7 +74,7 @@ export default function InfoDialog({ open, onOpenChange }: InfoDialogProps) {
             </section>
 
             <section>
-              <h3 className="text-keyword font-bold text-lg">Why Anonymous?</h3>
+              <h3 className="text-keyword font-bold text-base sm:text-lg">Why Anonymous?</h3>
               <p>
                 Your identity = <span className="text-string">anon_hash()</span>.  
                 Stored only in <span className="text-tag">cookies</span>, never linked
@@ -73,7 +84,7 @@ export default function InfoDialog({ open, onOpenChange }: InfoDialogProps) {
             </section>
 
             <section>
-              <h3 className="text-keyword font-bold text-lg">Terms & Conditions</h3>
+              <h3 className="text-keyword font-bold text-base sm:text-lg">Terms & Conditions</h3>
               <ul className="list-disc list-inside space-y-1 text-default">
                 <li><span className="text-string">Respect()</span> → No hate / abuse / harassment.</li>
                 <li><span className="text-string">NoPII()</span> → Don’t leak names, emails, numbers.</li>
@@ -85,10 +96,10 @@ export default function InfoDialog({ open, onOpenChange }: InfoDialogProps) {
         </ScrollArea>
 
         {/* 🚀 Footer */}
-        <DialogFooter>
+        <DialogFooter className="flex justify-center sm:justify-end pt-4">
           <Button
             onClick={() => onOpenChange(false)}
-            className="btn-hacker"
+            className="btn-hacker w-full sm:w-auto"
           >
             I Understand
           </Button>

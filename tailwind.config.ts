@@ -1,6 +1,7 @@
-import type {Config} from 'tailwindcss';
+import type { Config } from 'tailwindcss';
 
 export default {
+  darkMode: "class",
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -15,6 +16,10 @@ export default {
       },
     },
     extend: {
+      // ✅ Extra-small screen for tiny phones
+      screens: {
+        xs: '350px',
+      },
       fontFamily: {
         body: ['var(--font-body)'],
         code: ['var(--font-code)'],
@@ -70,12 +75,20 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
-        // Custom colors for syntax highlighting
-        keyword: "hsl(var(--primary))",    // cyan
-        string: "hsl(var(--accent))",     // neon green
-        number: "#ffb347",     // orange
-        tag: "#ff2ef5",        // magenta
-        comment: "hsl(var(--muted-foreground))", // gray
+        // ⚡ Hacker syntax highlight colors
+        keyword: "hsl(var(--primary))",
+        string: "hsl(var(--accent))",
+        number: "#ffb347",
+        tag: "#ff2ef5",
+        comment: "hsl(var(--muted-foreground))",
+
+        // ⚡ Cyberpunk neon set
+        neon: {
+          cyan: "#00f6ff",
+          purple: "#b100ff",
+          pink: "#ff00aa",
+          green: "#39ff14",
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -83,29 +96,54 @@ export default {
         sm: 'calc(var(--radius) - 4px)',
       },
       boxShadow: {
-        neon: "0 0 15px theme(colors.primary / 30%)",
+        neon: "0 0 15px rgba(0,246,255,0.5)",
+        'neon-lg': "0 0 25px rgba(255,0,255,0.6)",
+        innerGlow: "inset 0 0 12px rgba(0,255,255,0.25)",
       },
       keyframes: {
         'accordion-down': {
-          from: {
-            height: '0',
-          },
-          to: {
-            height: 'var(--radix-accordion-content-height)',
-          },
+          from: { height: '0' },
+          to: { height: 'var(--radix-accordion-content-height)' },
         },
         'accordion-up': {
-          from: {
-            height: 'var(--radix-accordion-content-height)',
-          },
-          to: {
-            height: '0',
-          },
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: '0' },
+        },
+        // ⚡ Hacker-style animations
+        blink: {
+          '50%': { opacity: '0' },
+        },
+        glitch: {
+          '0%': { transform: 'translate(0)' },
+          '20%': { transform: 'translate(-2px, 2px)' },
+          '40%': { transform: 'translate(-2px, -2px)' },
+          '60%': { transform: 'translate(2px, 2px)' },
+          '80%': { transform: 'translate(2px, -2px)' },
+          '100%': { transform: 'translate(0)' },
+        },
+        flicker: {
+          '0%, 100%': { opacity: '1' },
+          '41.99%': { opacity: '1' },
+          '42%': { opacity: '0' },
+          '43%': { opacity: '0' },
+          '43.01%': { opacity: '1' },
+          '47%': { opacity: '1' },
+          '47.01%': { opacity: '0' },
+          '49%': { opacity: '0' },
+          '49.01%': { opacity: '1' },
+        },
+        scanline: {
+          '0%': { transform: 'translateY(-100%)' },
+          '100%': { transform: 'translateY(100%)' },
         },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        blink: 'blink 1.2s infinite step-start',
+        glitch: 'glitch 500ms infinite',
+        flicker: 'flicker 3s infinite',
+        scanline: 'scanline 2s linear infinite',
       },
     },
   },

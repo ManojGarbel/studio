@@ -8,4 +8,5 @@ export const SOUNDS = {
     notification: '/sounds/notification.mp3',
     dialogOpen: '/sounds/pop-on.mp3',
     error: '/sounds/error.mp3',
+    typing:'/sounds/typing.mp3',
 };

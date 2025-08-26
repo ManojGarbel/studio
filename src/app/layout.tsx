@@ -35,34 +35,44 @@ export default function RootLayout({
     <html lang="en" className="dark h-full">
       <body
         className={cn(
-          "relative min-h-screen antialiased font-body flex flex-col bg-background text-foreground",
+          "relative min-h-screen antialiased font-body flex flex-col bg-background text-foreground selection:bg-accent/30 selection:text-accent",
           fontBody.variable,
           fontCode.variable
         )}
       >
-        {/* 🌌 Animated Space Background */}
+        {/* 🌌 Cyber Background */}
         <div id="stars1"></div>
         <div id="stars2"></div>
         <div id="stars3"></div>
         <div className="scanlines pointer-events-none"></div>
+        <div className="fixed inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/80 pointer-events-none"></div>
 
-        {/* 🛰️ Sticky Header */}
+        {/* 🛰️ Floating Sticky Header */}
         <Header />
 
-        {/* 📜 Main Content (scrollable) */}
-        <main className="flex-1 w-full py-8">
+        {/* 📜 Main Content */}
+        <main className="flex-1 w-full relative z-10 pt-24 pb-24">
           <div className="container max-w-2xl mx-auto px-4">
             {children}
           </div>
         </main>
 
-        {/* ⚡ Hacker Footer */}
-        <footer className="py-6 border-t border-border bg-background/80 backdrop-blur-md shadow-[0_-0_12px_rgba(0,255,255,0.2)]">
-          <div className="container flex flex-col items-center justify-between gap-4 md:h-16 md:flex-row">
-            <p className="text-xs font-mono text-muted-foreground cursor-blink">
-              &gt; built with 🖤 :: source code classified
-            </p>
-          </div>
+        {/* ⚡ Hacker Footer (floating bar) */}
+        <footer className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-2xl rounded-2xl bg-background/80 backdrop-blur-md border border-cyan-400/40 shadow-[0_0_20px_rgba(0,255,255,0.25)] px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-2">
+          <p className="text-xs font-mono text-muted-foreground cursor-blink">
+            &gt; crafted by{" "}
+            <a
+              href="https://hakkan.me"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-dotted hover:text-primary transition-colors"
+            >
+              Hakkan
+            </a>
+          </p>
+          <p className="text-[10px] text-muted-foreground font-mono opacity-70">
+            system@v1.0.0 &nbsp;|&nbsp; status::online
+          </p>
         </footer>
 
         {/* 🔔 Toast Notifications */}
