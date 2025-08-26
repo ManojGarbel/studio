@@ -40,8 +40,8 @@ interface Confession extends BaseConfession {
 // ---------------------------------------------------------------- //
 // 🎨 SYNTAX HIGHLIGHTER (No changes)
 // ---------------------------------------------------------------- //
-const SYNTAX_HIGHLIGHT_COLORS = { /* ... */ };
-const KEYWORDS = [ /* ... */ ];
+const SYNTAX_HIGHLIGHT_COLORS = { keyword: 'text-keyword', string: 'text-string', number: 'text-number', default: 'text-default' };
+const KEYWORDS = ['fix','bug','error','pushed','main','production','friday','debug','console.log','git','commit','database','server','client','react','javascript','typescript','css','html','python','java','c#','c++','php','ruby','go','rust','sql'];
 const CodeSyntaxHighlighter = ({ text }: { text: string }) => {
   return (
     <pre className="whitespace-pre-wrap break-words font-code text-sm leading-relaxed">
@@ -245,7 +245,6 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
   const [showComments, setShowComments] = useState(false);
   const [confession, setConfession] = useState(initialConfession);
   
-  // Sounds & other hooks...
   const playLikeSound = useSound(SOUNDS.like, 0.2);
   const playDislikeSound = useSound(SOUNDS.dislike, 0.2);
   const playReportSound = useSound(SOUNDS.report);
@@ -260,9 +259,60 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
     [confession.timestamp]
   );
   
-  // Like, Dislike, Report handlers (no changes to their logic)
-  const onLike = () => { /* ... */ };
-  const onDislike = () => { /* ... */ };
+  // ✅ FIXED: Like handler with optimistic UI update
+  const onLike = () => {
+    playLikeSound();
+    startTransition(async () => {
+      // Update UI immediately
+      setConfession(prev => {
+        let newLikes = prev.likes;
+        let newDislikes = prev.dislikes;
+        let newInteraction: 'like' | 'dislike' | null = 'like';
+
+        if (prev.userInteraction === 'like') { // Case 1: User is un-liking
+          newLikes--;
+          newInteraction = null;
+        } else if (prev.userInteraction === 'dislike') { // Case 2: User changes from dislike to like
+          newLikes++;
+          newDislikes--;
+        } else { // Case 3: User is liking for the first time
+          newLikes++;
+        }
+
+        return { ...prev, likes: newLikes, dislikes: newDislikes, userInteraction: newInteraction };
+      });
+      // Send request to server
+      await handleLike(confession.id);
+    });
+  };
+
+  // ✅ FIXED: Dislike handler with optimistic UI update
+  const onDislike = () => {
+    playDislikeSound();
+    startTransition(async () => {
+      // Update UI immediately
+      setConfession(prev => {
+        let newLikes = prev.likes;
+        let newDislikes = prev.dislikes;
+        let newInteraction: 'like' | 'dislike' | null = 'dislike';
+
+        if (prev.userInteraction === 'dislike') { // Case 1: User is un-disliking
+          newDislikes--;
+          newInteraction = null;
+        } else if (prev.userInteraction === 'like') { // Case 2: User changes from like to dislike
+          newDislikes++;
+          newLikes--;
+        } else { // Case 3: User is disliking for the first time
+          newDislikes++;
+        }
+
+        return { ...prev, likes: newLikes, dislikes: newDislikes, userInteraction: newInteraction };
+      });
+      // Send request to server
+      await handleDislike(confession.id);
+    });
+  };
+
   const onReport = (id: string, type: 'confession' | 'comment') => {
     playReportSound();
     startTransition(async () => {
@@ -288,7 +338,6 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
 
       <CardFooter className="flex flex-col gap-3 px-4 py-3">
         <div className="flex w-full items-center gap-2">
-          {/* Action Buttons (Like, Dislike, Comment, Report) */}
           <Button onClick={onLike} disabled={isPending} variant="ghost" className="btn-hacker flex h-9 w-20 items-center justify-center gap-2 p-0">
             <span className="text-sm font-medium tabular-nums">{confession.likes}</span>
             <Heart className={`h-4 w-4 transition-colors ${confession.userInteraction === 'like' ? 'fill-current text-string' : 'text-muted-foreground'}`}/>
@@ -306,7 +355,6 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
           </Button>
         </div>
 
-        {/* Render the new CommentsSection component when active */}
         {showComments && <CommentsSection confession={confession} onReport={onReport} />}
       </CardFooter>
     </Card>
