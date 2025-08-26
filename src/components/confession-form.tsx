@@ -36,7 +36,7 @@ function CharacterCounter({ count }: { count: number }) {
   );
 }
 
-/* 🚀 Hacker Submit Button */
+/* Submit Button */
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
