@@ -36,14 +36,13 @@ function CharacterCounter({ count }: { count: number }) {
   );
 }
 
-/* Submit Button */
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button
       type="submit"
       disabled={pending}
-      className="btn-hacker w-full rounded-lg px-6 py-2 text-sm sm:w-auto sm:text-base"
+      className="btn-hacker rounded-full px-4 py-1 text-sm" // Changed classes for size and shape
     >
       {pending ? (
         <span className="flex items-center gap-2">
@@ -59,7 +58,6 @@ function SubmitButton() {
     </Button>
   );
 }
-
 export default function ConfessionForm() {
   const { toast } = useToast();
   const [state, formAction] = useActionState(submitConfession, {
