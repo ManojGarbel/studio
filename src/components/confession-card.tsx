@@ -172,37 +172,64 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
         <CodeSyntaxHighlighter text={confession.text} />
       </CardContent>
 
-      {/* 🔘 Actions */}
-      <CardFooter className="px-4 py-3 flex flex-col gap-3">
-        <div className="flex flex-wrap gap-2 sm:gap-3">
-          <Button onClick={onLike} disabled={isPending} variant="ghost" size="sm" className="btn-hacker flex items-center gap-1">
-            <Heart className={`h-4 w-4 ${confession.userInteraction === 'like' ? 'text-string fill-current' : 'text-muted-foreground'}`} />
-            <span className="text-xs">{confession.likes}</span>
-          </Button>
+     {/* 🔘 Actions */}
+<CardFooter className="px-4 py-3 flex flex-col gap-3">
+  <div className="flex flex-wrap gap-2 sm:gap-3">
+    
+    {/* Like */}
+    <Button
+      onClick={onLike}
+      disabled={isPending}
+      variant="ghost"
+      className={`flex flex-col items-center justify-center w-12 h-12 p-2 rounded-lg hover:bg-accent/10 transition-colors ${
+        confession.userInteraction === 'like' ? 'text-string' : 'text-muted-foreground'
+      }`}
+    >
+      <Heart className="w-5 h-5 mb-1" />
+      <span className="text-xs">{confession.likes}</span>
+    </Button>
 
-          <Button onClick={onDislike} disabled={isPending} variant="ghost" size="sm" className="btn-hacker flex items-center gap-1">
-            <ThumbsDown className={`h-4 w-4 ${confession.userInteraction === 'dislike' ? 'text-destructive fill-current' : 'text-muted-foreground'}`} />
-            <span className="text-xs">{confession.dislikes}</span>
-          </Button>
+    {/* Dislike */}
+    <Button
+      onClick={onDislike}
+      disabled={isPending}
+      variant="ghost"
+      className={`flex flex-col items-center justify-center w-12 h-12 p-2 rounded-lg hover:bg-destructive/10 transition-colors ${
+        confession.userInteraction === 'dislike' ? 'text-destructive' : 'text-muted-foreground'
+      }`}
+    >
+      <ThumbsDown className="w-5 h-5 mb-1" />
+      <span className="text-xs">{confession.dislikes}</span>
+    </Button>
 
-          <Button onClick={() => setShowComments(!showComments)} variant="ghost" size="sm" className="btn-hacker flex items-center gap-1">
-            <MessageSquare className="h-4 w-4" />
-            <span className="text-xs">{confession.comments.length}</span>
-          </Button>
+    {/* Comment */}
+    <Button
+      onClick={() => setShowComments(!showComments)}
+      variant="ghost"
+      className="flex flex-col items-center justify-center w-12 h-12 p-2 rounded-lg hover:bg-accent/10 transition-colors text-muted-foreground"
+    >
+      <MessageSquare className="w-5 h-5 mb-1" />
+      <span className="text-xs">{confession.comments.length}</span>
+    </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="btn-hacker">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onReport(confession.id, 'confession')}>
-                <Flag className="mr-2 h-4 w-4" /> Report
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+    {/* Report */}
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className="flex flex-col items-center justify-center w-12 h-12 p-2 rounded-lg hover:bg-destructive/10 transition-colors text-muted-foreground"
+        >
+          <MoreVertical className="w-5 h-5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => onReport(confession.id, 'confession')}>
+          <Flag className="mr-2 w-4 h-4" /> Report
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+
+  </div>
 
         {/* 💬 Comments */}
         {showComments && (
