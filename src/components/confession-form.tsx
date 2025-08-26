@@ -48,7 +48,7 @@ function SubmitButton() {
       {pending ? (
         <span className="flex items-center gap-2">
           <span className="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent border-green-400"></span>
-          <span className="cursor-blink">transmitting...</span>
+          <span className="cursor-blink">Posting...</span>
         </span>
       ) : (
         <span className="flex items-center gap-2">
@@ -75,7 +75,7 @@ export default function ConfessionForm() {
       if (state.success) {
         playSubmitSound();
         toast({
-          title: '✅ Transmission Complete!',
+          title: '✅ Submission Complete!',
           description: state.message,
         });
         formRef.current?.reset();
@@ -83,7 +83,7 @@ export default function ConfessionForm() {
       } else {
         toast({
           variant: 'destructive',
-          title: '⚠️ Transmission Failed',
+          title: '⚠️ Submission Failed',
           description: state.message,
         });
       }
@@ -98,10 +98,10 @@ export default function ConfessionForm() {
           <CardHeader className="px-4 pb-2 pt-4 text-center">
             <CardTitle className="glitch flex items-center justify-center gap-2 text-xl text-accent sm:text-2xl">
               <Terminal className="h-5 w-5" />
-              <span>Confess now</span>
+              <span>Confess Now</span>
             </CardTitle>
             <CardDescription className="cursor-blink text-xs text-muted-foreground sm:text-sm">
-              just write your confession and hit enter
+              just write your confession and hit 'Confess' 
             </CardDescription>
           </CardHeader>
 

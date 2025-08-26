@@ -18,9 +18,56 @@ const fontCode = Source_Code_Pro({
 
 export const metadata: Metadata = {
   title: "<ConfessCode/>",
-  description: "Anonymously confess your coding sins.",
+  description: "An anonymous platform where coders, college students, and users can confess their secrets, share gossips, vent frustrations, and reveal dark truths — all safely and privately without saving credentials.",
   manifest: "/manifest.webmanifest",
+  keywords: [
+    "anonymous confessions",
+    "coding confessions",
+    "college secrets",
+    "gossip platform",
+    "vent anonymously",
+    "dark truths",
+    "online confessions",
+    "anonymous chat",
+    "fun confessions",
+    "privacy-first",
+    "hakkan parbej shah",
+    "hakkan confesscode",
+    "vercel confesscode"
+  ],
+  authors: [
+    { name: "Hakkan Shah" }
+  ],
+  creator: "Hakkan Shah",
+  category: "Social / Anonymous Confessions",
+  applicationName: "<ConfessCode/>",
+  robots: "index, follow",
+  themeColor: "#00ffe0",
+  openGraph: {
+    title: "<ConfessCode/>",
+    description: "Confess your coding sins, secrets, gossips, and dark truths anonymously. Interact safely with others without revealing your identity.",
+    url: "https://www.concode.vercel.app/",
+    siteName: "<ConfessCode/>",
+    images: [
+      {
+        url: "https://assets.clever.com/resource-icons/apps/53e92d20fc1adfa44400fe87/icon_7585b0c.png",
+        width: 1200,
+        height: 630,
+        alt: "ConfessCode - Anonymous Confessions"
+      }
+    ],
+    locale: "en_US",
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "<ConfessCode/>",
+    description: "Share your secrets, confessions, and gossips anonymously with other coders and students.",
+    creator: "@HakkanShah",
+    images: ["https://assets.clever.com/resource-icons/apps/53e92d20fc1adfa44400fe87/icon_7585b0c.png"]
+  }
 };
+
 
 export const viewport: Viewport = {
   themeColor: "#00ffe0",
