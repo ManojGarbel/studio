@@ -9,14 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import type { Confession } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
-import {
-  Heart,
-  MessageSquare,
-  Flag,
-  ThumbsDown,
-  Send,
-  MoreVertical,
-} from 'lucide-react';
+import { Heart, MessageSquare, Flag, ThumbsDown, Send } from 'lucide-react';
 import { useState, useTransition, useRef, useEffect, useMemo } from 'react';
 import {
   handleLike,
@@ -27,12 +20,6 @@ import {
 } from '@/lib/actions';
 import { Textarea } from './ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import Cookies from 'js-cookie';
 import useSound from '@/hooks/use-sound';
 import { SOUNDS } from '@/lib/sounds';
@@ -49,7 +36,7 @@ const KEYWORDS = [
   'fix','bug','error','pushed','main','production','friday','debug',
   'console.log','git','commit','database','server','client',
   'react','javascript','typescript','css','html','python','java',
-  'c#','c++','php','ruby','go','rust','sql'
+  'c#','c++','php','ruby','Hakkan','rust','sql'
 ];
 
 /* 💻 Syntax Highlighter (lightweight, no extra span rendering if not needed) */
@@ -172,75 +159,80 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
         <CodeSyntaxHighlighter text={confession.text} />
       </CardContent>
 
-     {/* 🔘 Actions */}
-<CardFooter className="px-4 py-3 flex flex-col gap-3">
-  <div className="flex flex-wrap gap-2 sm:gap-3">
-    
-    {/* Like */}
-    <Button
-      onClick={onLike}
-      disabled={isPending}
-      variant="ghost"
-      className={`flex flex-col items-center justify-center w-12 h-12 p-2 rounded-lg hover:bg-accent/10 transition-colors ${
-        confession.userInteraction === 'like' ? 'text-string' : 'text-muted-foreground'
-      }`}
-    >
-      <Heart className="w-5 h-5 mb-1" />
-      <span className="text-xs">{confession.likes}</span>
-    </Button>
+      {/* 🔘 Actions */}
+      <CardFooter className="px-4 py-3 flex flex-col gap-3">
+        <div className="flex w-full items-center gap-2">
+          {/* Like Button */}
+          <Button
+            onClick={onLike}
+            disabled={isPending}
+            variant="ghost"
+            className="btn-hacker flex h-9 w-20 items-center justify-center gap-2 p-0"
+          >
+            <span className="text-sm font-medium tabular-nums">
+              {confession.likes}
+            </span>
+            <Heart
+              className={`h-4 w-4 transition-colors ${
+                confession.userInteraction === 'like'
+                  ? 'fill-current text-string'
+                  : 'text-muted-foreground'
+              }`}
+            />
+          </Button>
 
-    {/* Dislike */}
-    <Button
-      onClick={onDislike}
-      disabled={isPending}
-      variant="ghost"
-      className={`flex flex-col items-center justify-center w-12 h-12 p-2 rounded-lg hover:bg-destructive/10 transition-colors ${
-        confession.userInteraction === 'dislike' ? 'text-destructive' : 'text-muted-foreground'
-      }`}
-    >
-      <ThumbsDown className="w-5 h-5 mb-1" />
-      <span className="text-xs">{confession.dislikes}</span>
-    </Button>
+          {/* Dislike Button */}
+          <Button
+            onClick={onDislike}
+            disabled={isPending}
+            variant="ghost"
+            className="btn-hacker flex h-9 w-20 items-center justify-center gap-2 p-0"
+          >
+            <span className="text-sm font-medium tabular-nums">
+              {confession.dislikes}
+            </span>
+            <ThumbsDown
+              className={`h-4 w-4 transition-colors ${
+                confession.userInteraction === 'dislike'
+                  ? 'fill-current text-destructive'
+                  : 'text-muted-foreground'
+              }`}
+            />
+          </Button>
 
-    {/* Comment */}
-    <Button
-      onClick={() => setShowComments(!showComments)}
-      variant="ghost"
-      className="flex flex-col items-center justify-center w-12 h-12 p-2 rounded-lg hover:bg-accent/10 transition-colors text-muted-foreground"
-    >
-      <MessageSquare className="w-5 h-5 mb-1" />
-      <span className="text-xs">{confession.comments.length}</span>
-    </Button>
-
-    {/* Report */}
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="flex flex-col items-center justify-center w-12 h-12 p-2 rounded-lg hover:bg-destructive/10 transition-colors text-muted-foreground"
-        >
-          <MoreVertical className="w-5 h-5" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => onReport(confession.id, 'confession')}>
-          <Flag className="mr-2 w-4 h-4" /> Report
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-
-  </div>
+          {/* Comment Button */}
+          <Button
+            onClick={() => setShowComments(!showComments)}
+            variant="ghost"
+            className="btn-hacker flex h-9 w-20 items-center justify-center gap-2 p-0"
+          >
+            <span className="text-sm font-medium tabular-nums">
+              {confession.comments.length}
+            </span>
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+          </Button>
+          
+          {/* Report Button */}
+          <Button
+            onClick={() => onReport(confession.id, 'confession')}
+            disabled={isPending}
+            variant="ghost"
+            className="btn-hacker ml-auto flex h-9 w-20 items-center justify-center p-0"
+          >
+            <Flag className="h-4 w-4 text-muted-foreground transition-colors hover:text-destructive" />
+          </Button>
+        </div>
 
         {/* 💬 Comments */}
         {showComments && (
-          <div className="w-full border-t border-accent/20 pt-3 space-y-3 max-h-56 overflow-y-auto scrollbar-thin scrollbar-thumb-accent/40">
+          <div className="w-full space-y-3 border-t border-accent/20 pt-3 max-h-56 overflow-y-auto scrollbar-thin scrollbar-thumb-accent/40">
             <form action={handleCommentSubmit} ref={formRef} className="flex gap-2">
               <Textarea
                 name="comment"
                 placeholder="> add comment..."
                 rows={1}
                 required
-                className="flex-1 font-code bg-background text-xs sm:text-sm border border-accent/30 rounded-md resize-none"
+                className="flex-1 rounded-md border border-accent/30 bg-background font-code text-xs resize-none sm:text-sm"
               />
               <Button type="submit" size="icon" disabled={isPending} className="btn-hacker shrink-0">
                 <Send className="h-4 w-4" />
@@ -248,10 +240,10 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
             </form>
 
             {confession.comments.map((comment) => (
-              <div key={comment.id} className="text-xs sm:text-sm bg-secondary/10 p-2 rounded-md border border-secondary/30">
+              <div key={comment.id} className="rounded-md border border-secondary/30 bg-secondary/10 p-2 text-xs sm:text-sm">
                 <p className="text-accent">
                   anon::{comment.anonHash.substring(0, 6)}
-                  <span className="text-muted-foreground ml-2">
+                  <span className="ml-2 text-muted-foreground">
                     {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
                   </span>
                 </p>
@@ -262,7 +254,7 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
                   className="btn-hacker mt-1"
                   onClick={() => onReport(comment.id, 'comment')}
                 >
-                  <Flag className="h-3 w-3 mr-1" /> Report
+                  <Flag className="mr-1 h-3 w-3" /> Report
                 </Button>
               </div>
             ))}
