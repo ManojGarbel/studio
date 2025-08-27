@@ -16,13 +16,16 @@ export default {
       },
     },
     extend: {
-      // ✅ Extra-small screen for tiny phones
       screens: {
         xs: '350px',
       },
       fontFamily: {
         body: ['var(--font-body)'],
         code: ['var(--font-code)'],
+      },
+      // ✨ NEW: Inlined SVG for scanlines effect. No file needed.
+      backgroundImage: {
+        'scanlines': "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%2339ff14' fill-opacity='0.1' d='M0 2h4v1H0z'/%3E%3C/svg%3E\")",
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -75,14 +78,11 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
-        // ⚡ Hacker syntax highlight colors
         keyword: "hsl(var(--primary))",
         string: "hsl(var(--accent))",
         number: "#ffb347",
         tag: "#ff2ef5",
         comment: "hsl(var(--muted-foreground))",
-
-        // ⚡ Cyberpunk neon set
         neon: {
           cyan: "#00f6ff",
           purple: "#b100ff",
@@ -94,10 +94,13 @@ export default {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+        none: '0', // Ensure rounded-none works
       },
       boxShadow: {
         neon: "0 0 15px rgba(0,246,255,0.5)",
         'neon-lg': "0 0 25px rgba(255,0,255,0.6)",
+        'neon-green': "0 0 15px rgba(57, 255, 20, 0.2)",
+        'neon-green-lg': "0 0 25px rgba(57, 255, 20, 0.3)",
         innerGlow: "inset 0 0 12px rgba(0,255,255,0.25)",
       },
       keyframes: {
@@ -109,7 +112,10 @@ export default {
           from: { height: 'var(--radix-accordion-content-height)' },
           to: { height: '0' },
         },
-        // ⚡ Hacker-style animations
+        'fade-in-slow': {
+          'from': { opacity: '0', transform: 'translateY(10px)' },
+          'to': { opacity: '1', transform: 'translateY(0)' },
+        },
         blink: {
           '50%': { opacity: '0' },
         },
@@ -144,6 +150,7 @@ export default {
         glitch: 'glitch 500ms infinite',
         flicker: 'flicker 3s infinite',
         scanline: 'scanline 2s linear infinite',
+        'fade-in-slow': 'fade-in-slow 0.6s ease-out forwards',
       },
     },
   },
