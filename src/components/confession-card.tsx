@@ -4,7 +4,8 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button';
 import type { Confession as BaseConfession, Comment as BaseComment } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
-import { Heart, MessageSquare, Flag, ThumbsDown, Send, CornerDownRight } from 'lucide-react';
+// ✨ MODIFIED: Imported new icons for Share and MoreVertical
+import { Heart, MessageSquare, Flag, ThumbsDown, Send, CornerDownRight, MoreVertical, Share2 } from 'lucide-react';
 import { useState, useTransition, useRef, useEffect, useMemo, FormEvent, ChangeEvent } from 'react';
 import {
   handleLike,
@@ -102,12 +103,10 @@ function CommentForm({
         required
         disabled={isPending}
         onInput={handleTextareaInput}
-        // ✨ MODIFIED: Reduced padding for a shorter input box
         className="flex-1 rounded-full border-2 border-slate-700 bg-slate-800/80 px-4 py-1.5 font-body text-sm text-slate-200 resize-none overflow-y-hidden focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
         style={{ maxHeight: '120px' }}
       />
       <Button type="submit" size="icon" disabled={isPending} 
-        // ✨ MODIFIED: Reduced button size to match new input height
         className="bg-sky-500 hover:bg-sky-600 text-white rounded-full h-9 w-9 shrink-0 active:scale-90 transition-all">
         <Send className="h-4 w-4" />
       </Button>
@@ -136,20 +135,22 @@ function CommentThread({
           <AvatarFallback>🕶️</AvatarFallback>
         </Avatar>
         <div className="flex-1 rounded-2xl bg-slate-800/60 p-3">
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <span className="font-semibold text-sky-400">anon::{comment.anonHash.substring(0, 6)}</span>
-            <span>•</span>
-            <span>{formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+                <span className="font-semibold text-sky-400">anon::{comment.anonHash.substring(0, 6)}</span>
+                <span>•</span>
+                <span>{formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}</span>
+            </div>
+            {/* ✨ NEW: Report button for individual comments */}
+            <button onClick={() => onReport(comment.id, 'comment')} className="text-slate-500 hover:text-red-400 transition active:scale-95">
+                <Flag className="h-3.5 w-3.5" />
+            </button>
           </div>
           <p className="mt-1 text-sm leading-relaxed text-slate-200">{comment.text}</p>
           <div className="mt-2 flex gap-4 text-xs">
             <button onClick={() => setIsReplying(!isReplying)} className="flex items-center gap-1.5 text-slate-400 hover:text-sky-400 transition active:scale-95">
               <CornerDownRight className="h-3.5 w-3.5" />
               Reply
-            </button>
-            <button onClick={() => onReport(comment.id, 'comment')} className="flex items-center gap-1.5 text-slate-400 hover:text-red-400 transition active:scale-95">
-              <Flag className="h-3.5 w-3.5" />
-              Report
             </button>
           </div>
         </div>
@@ -232,7 +233,6 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
   const refresh = () => setConfession(prev => ({...prev}));
   const timeAgo = useMemo(() => formatDistanceToNow(new Date(confession.timestamp), { addSuffix: true }), [confession.timestamp]);
 
-  // ✨ FIXED: Added back the logic for immediate UI updates
   const onLike = () => {
     playLikeSound();
     startTransition(async () => {
@@ -248,7 +248,6 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
     });
   };
 
-  // ✨ FIXED: Added back the logic for immediate UI updates
   const onDislike = () => {
     playDislikeSound();
     startTransition(async () => {
@@ -273,19 +272,33 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
       else if (result?.message) toast({ variant: 'destructive', title: 'Error', description: result.message });
     });
   };
+  
+  // ✨ NEW: Placeholder function for the share button
+  const onShare = () => {
+    toast({
+      title: "Share Feature",
+      description: "This is where the share functionality will be implemented.",
+    });
+    // You can add navigator.share logic here in the future
+  };
 
   return (
-    // ✨ MODIFIED: Changed background to transparent black
     <Card className="w-full overflow-hidden rounded-2xl border border-slate-700/50 bg-black/70 backdrop-blur-xl font-body shadow-lg shadow-sky-500/10">
-      <CardHeader className="flex flex-row items-center gap-3 p-4">
-        <Avatar className="h-10 w-10">
-          <AvatarImage src="/icons/dp.png" alt="User Avatar" />
-          <AvatarFallback>🕶️</AvatarFallback>
-        </Avatar>
-        <div className="text-sm">
-          <p className="font-semibold text-sky-400">anon::{confession.anonHash.substring(0, 6)}</p>
-          <p className="text-slate-400">{timeAgo}</p>
+      {/* ✨ MODIFIED: Header now includes the report button */}
+      <CardHeader className="flex flex-row items-center justify-between p-4">
+        <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src="/icons/dp.png" alt="User Avatar" />
+              <AvatarFallback>🕶️</AvatarFallback>
+            </Avatar>
+            <div className="text-sm">
+              <p className="font-semibold text-sky-400">anon::{confession.anonHash.substring(0, 6)}</p>
+              <p className="text-slate-400">{timeAgo}</p>
+            </div>
         </div>
+        <Button onClick={() => onReport(confession.id, 'confession')} disabled={isPending} variant="ghost" size="icon" className="h-10 w-10 rounded-full text-slate-400 transition-all duration-200 hover:bg-red-500/10 hover:text-red-400 active:scale-90">
+            <MoreVertical className="h-5 w-5" />
+        </Button>
       </CardHeader>
 
       <CardContent className="px-4 pb-2">
@@ -293,7 +306,8 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
       </CardContent>
 
       <CardFooter className="flex flex-col gap-3 p-4">
-        <div className="flex w-full items-center justify-between">
+        {/* ✨ MODIFIED: Share button replaces the old report button */}
+        <div className="flex w-full items-center">
           <div className="flex items-center gap-1">
             <Button onClick={onLike} disabled={isPending} variant="ghost" className="flex h-10 w-16 items-center justify-center gap-2 rounded-full p-0 text-slate-400 transition-all duration-200 hover:bg-green-500/10 active:scale-90">
               <span className={cn('text-sm font-medium', confession.userInteraction === 'like' && 'text-green-400')}>{confession.likes}</span>
@@ -308,9 +322,11 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
               <MessageSquare className="h-5 w-5" />
             </Button>
           </div>
-          <Button onClick={() => onReport(confession.id, 'confession')} disabled={isPending} variant="ghost" size="icon" className="h-10 w-10 rounded-full text-slate-400 transition-all duration-200 hover:bg-red-500/10 hover:text-red-400 active:scale-90">
-            <Flag className="h-5 w-5" />
-          </Button>
+          <div className="ml-auto">
+            <Button onClick={onShare} disabled={isPending} variant="ghost" size="icon" className="h-10 w-10 rounded-full text-slate-400 transition-all duration-200 hover:bg-sky-500/10 hover:text-sky-400 active:scale-90">
+              <Share2 className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
         
         <div className={cn('w-full transition-all duration-500 ease-in-out overflow-hidden', showComments ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0')}>
