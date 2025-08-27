@@ -22,16 +22,15 @@ import { Textarea } from './ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import useSound from '@/hooks/use-sound';
 import { SOUNDS } from '@/lib/sounds';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // ✅ for DP
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 // ---------------------------------------------------------------- //
 // 📄 TYPE DEFINITIONS
 // ---------------------------------------------------------------- //
 interface Comment extends BaseComment {
   parentId: string | null;
-  replies: Comment[]; // ✅ required, not optional
+  replies: Comment[];
 }
-
 interface Confession extends BaseConfession {
   comments: Comment[];
 }
@@ -39,25 +38,27 @@ interface Confession extends BaseConfession {
 // ---------------------------------------------------------------- //
 // 🎨 SYNTAX HIGHLIGHTER
 // ---------------------------------------------------------------- //
-const SYNTAX_HIGHLIGHT_COLORS = { keyword: 'text-keyword', string: 'text-string', number: 'text-number', default: 'text-default' };
-const KEYWORDS = ['Hakkan','fix','bug','error','pushed','main','production','friday','debug','console.log','git','commit','database','server','client','react','javascript','typescript','css','html','python','java','c#','c++','php','ruby','go','rust','sql'];
-const CodeSyntaxHighlighter = ({ text }: { text: string }) => {
-  return (
-    <pre className="whitespace-pre-wrap break-words font-code text-sm leading-relaxed">
-      <code>
-        {text.split(/(\s+|[.,;!?()])/).map((word, i) => {
-          const lower = word.toLowerCase();
-          let color = SYNTAX_HIGHLIGHT_COLORS.default;
-          if (KEYWORDS.includes(lower)) color = SYNTAX_HIGHLIGHT_COLORS.keyword;
-          else if (!isNaN(Number(word))) color = SYNTAX_HIGHLIGHT_COLORS.number;
-          else if ((word.startsWith('"') && word.endsWith('"')) || (word.startsWith("'") && word.endsWith("'")))
-            color = SYNTAX_HIGHLIGHT_COLORS.string;
-          return <span key={i} className={`${color}`}>{word}</span>;
-        })}
-      </code>
-    </pre>
-  );
-};
+const KEYWORDS = [
+  'fix', 'bug', 'error', 'pushed', 'main', 'production', 'friday', 'debug',
+  'console.log', 'git', 'commit', 'database', 'server', 'client', 'react',
+  'javascript', 'typescript', 'css', 'html', 'python', 'java', 'c#', 'c++',
+  'php', 'ruby', 'go', 'rust', 'sql'
+];
+const CodeSyntaxHighlighter = ({ text }: { text: string }) => (
+  <pre className="whitespace-pre-wrap break-words font-code text-sm leading-relaxed">
+    <code>
+      {text.split(/(\s+|[.,;!?()])/).map((word, i) => {
+        const lower = word.toLowerCase();
+        let color = "text-gray-200";
+        if (KEYWORDS.includes(lower)) color = "text-green-400";
+        else if (!isNaN(Number(word))) color = "text-purple-400";
+        else if ((word.startsWith('"') && word.endsWith('"')) || (word.startsWith("'") && word.endsWith("'")))
+          color = "text-yellow-400";
+        return <span key={i} className={color}>{word}</span>;
+      })}
+    </code>
+  </pre>
+);
 
 // ---------------------------------------------------------------- //
 // 💬 COMMENT FORM
@@ -105,9 +106,9 @@ function CommentForm({
         rows={1}
         required
         disabled={isPending}
-        className="flex-1 rounded-md border border-accent/30 bg-background font-code text-xs resize-none sm:text-sm"
+        className="flex-1 rounded-md border border-accent/30 bg-gray-900/60 font-code text-xs resize-none sm:text-sm focus:border-accent focus:ring-1 focus:ring-accent"
       />
-      <Button type="submit" size="icon" disabled={isPending} className="btn-hacker shrink-0">
+      <Button type="submit" size="icon" disabled={isPending} className="bg-accent/20 hover:bg-accent/40 text-accent rounded-md">
         <Send className="h-4 w-4" />
       </Button>
     </form>
@@ -122,49 +123,45 @@ function CommentThread({
   onReport,
   confessionId,
   refresh,
+  depth = 0,
 }: {
   comment: Comment;
   onReport: (id: string, type: 'comment') => void;
   confessionId: string;
   refresh: () => void;
+  depth?: number;
 }) {
   const [isReplying, setIsReplying] = useState(false);
 
   return (
     <div className="flex flex-col">
-      {/* Main Comment */}
-      <div className="flex gap-3 rounded-lg bg-secondary/5 p-3 transition hover:bg-secondary/10">
-        {/* Avatar */}
+      <div
+        className={`flex gap-3 rounded-lg p-3 transition 
+        ${depth === 0 ? "bg-gray-900/60 hover:bg-gray-900/80" : "bg-gray-800/50 hover:bg-gray-800/70"}
+        `}
+      >
         <Avatar className="h-7 w-7 shrink-0">
           <AvatarImage src="/icon/dp.png" alt="anon" />
           <AvatarFallback>🕶️</AvatarFallback>
         </Avatar>
-
-        {/* Content */}
         <div className="flex-1">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="font-medium text-accent">
-              anon::{comment.anonHash.substring(0, 6)}
-            </span>
+            <span className="font-medium text-accent">anon::{comment.anonHash.substring(0, 6)}</span>
             <span>•</span>
-            <span>
-              {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
-            </span>
+            <span>{formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}</span>
           </div>
-
-          <p className="mt-1 text-sm leading-relaxed text-default">{comment.text}</p>
-
+          <p className="mt-1 text-sm leading-relaxed text-gray-200">{comment.text}</p>
           <div className="mt-2 flex gap-3 text-xs">
             <button
               onClick={() => setIsReplying(!isReplying)}
-              className="flex items-center gap-1 text-muted-foreground hover:text-accent transition"
+              className="flex items-center gap-1 text-gray-400 hover:text-accent transition"
             >
               <CornerDownRight className="h-3 w-3" />
               Reply
             </button>
             <button
               onClick={() => onReport(comment.id, 'comment')}
-              className="flex items-center gap-1 text-muted-foreground hover:text-destructive transition"
+              className="flex items-center gap-1 text-gray-400 hover:text-red-500 transition"
             >
               <Flag className="h-3 w-3" />
               Report
@@ -173,24 +170,8 @@ function CommentThread({
         </div>
       </div>
 
-      {/* Replies */}
-      {comment.replies && comment.replies.length > 0 && (
-        <div className="ml-6 mt-3 space-y-3 border-l border-border pl-4">
-          {comment.replies.map((reply) => (
-            <CommentThread
-              key={reply.id}
-              comment={reply}
-              onReport={onReport}
-              confessionId={confessionId}
-              refresh={refresh}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Reply Form */}
       {isReplying && (
-        <div className="ml-6 mt-3 border-l border-accent/20 pl-4">
+        <div className="ml-6 mt-3 pl-4 border-l border-accent/30">
           <CommentForm
             confessionId={confessionId}
             parentId={comment.id}
@@ -200,6 +181,21 @@ function CommentThread({
             }}
             placeholder="> drafting reply..."
           />
+        </div>
+      )}
+
+      {comment.replies?.length > 0 && (
+        <div className="ml-6 mt-3 space-y-3 border-l border-gray-700/40 pl-4">
+          {comment.replies.map((reply) => (
+            <CommentThread
+              key={reply.id}
+              comment={reply}
+              onReport={onReport}
+              confessionId={confessionId}
+              refresh={refresh}
+              depth={depth + 1}
+            />
+          ))}
         </div>
       )}
     </div>
@@ -221,26 +217,16 @@ function CommentsSection({
   const nestedComments = useMemo(() => {
     const commentMap: Record<string, Comment> = {};
     const topLevel: Comment[] = [];
-
-    // clone with replies array to avoid mutation issues
+    confession.comments.forEach((c) => { commentMap[c.id] = { ...c, replies: [] }; });
     confession.comments.forEach((c) => {
-      commentMap[c.id] = { ...c, replies: [] };
+      if (c.parentId && commentMap[c.parentId]) commentMap[c.parentId].replies.push(commentMap[c.id]);
+      else topLevel.push(commentMap[c.id]);
     });
-
-    confession.comments.forEach((c) => {
-      if (c.parentId && commentMap[c.parentId]) {
-        commentMap[c.parentId].replies.push(commentMap[c.id]);
-      } else {
-        topLevel.push(commentMap[c.id]);
-      }
-    });
-
     return topLevel;
   }, [confession.comments]);
 
   return (
-    <div className="w-full space-y-4 border-t border-accent/20 pt-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-accent/40">
-      {/* Comment Input */}
+    <div className="w-full space-y-4 border-t border-accent/30 pt-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-accent/40">
       <div className="flex items-start gap-3">
         <Avatar className="h-7 w-7 shrink-0">
           <AvatarImage src="/icon/dp.png" alt="anon" />
@@ -248,8 +234,6 @@ function CommentsSection({
         </Avatar>
         <CommentForm confessionId={confession.id} onCommentAdded={refresh} />
       </div>
-
-      {/* Thread */}
       <div className="space-y-4">
         {nestedComments.map((comment) => (
           <CommentThread
@@ -272,20 +256,14 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
   const [isPending, startTransition] = useTransition();
   const [showComments, setShowComments] = useState(false);
   const [confession, setConfession] = useState(initialConfession);
-  
+
   const playLikeSound = useSound(SOUNDS.like, 0.2);
   const playDislikeSound = useSound(SOUNDS.dislike, 0.2);
   const playReportSound = useSound(SOUNDS.report);
   const { toast } = useToast();
 
-  useEffect(() => {
-    setConfession(initialConfession);
-  }, [initialConfession]);
-
-  const refresh = () => {
-    // 🔄 refetch or reload comments from server if needed
-    setConfession((prev) => ({ ...prev }));
-  };
+  useEffect(() => { setConfession(initialConfession); }, [initialConfession]);
+  const refresh = () => setConfession((prev) => ({ ...prev }));
 
   const timeAgo = useMemo(
     () => formatDistanceToNow(new Date(confession.timestamp), { addSuffix: true }),
@@ -296,20 +274,11 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
     playLikeSound();
     startTransition(async () => {
       setConfession(prev => {
-        let newLikes = prev.likes;
-        let newDislikes = prev.dislikes;
+        let newLikes = prev.likes, newDislikes = prev.dislikes;
         let newInteraction: 'like' | 'dislike' | null = 'like';
-
-        if (prev.userInteraction === 'like') {
-          newLikes--;
-          newInteraction = null;
-        } else if (prev.userInteraction === 'dislike') {
-          newLikes++;
-          newDislikes--;
-        } else {
-          newLikes++;
-        }
-
+        if (prev.userInteraction === 'like') { newLikes--; newInteraction = null; }
+        else if (prev.userInteraction === 'dislike') { newLikes++; newDislikes--; }
+        else { newLikes++; }
         return { ...prev, likes: newLikes, dislikes: newDislikes, userInteraction: newInteraction };
       });
       await handleLike(confession.id);
@@ -320,20 +289,11 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
     playDislikeSound();
     startTransition(async () => {
       setConfession(prev => {
-        let newLikes = prev.likes;
-        let newDislikes = prev.dislikes;
+        let newLikes = prev.likes, newDislikes = prev.dislikes;
         let newInteraction: 'like' | 'dislike' | null = 'dislike';
-
-        if (prev.userInteraction === 'dislike') {
-          newDislikes--;
-          newInteraction = null;
-        } else if (prev.userInteraction === 'like') {
-          newDislikes++;
-          newLikes--;
-        } else {
-          newDislikes++;
-        }
-
+        if (prev.userInteraction === 'dislike') { newDislikes--; newInteraction = null; }
+        else if (prev.userInteraction === 'like') { newDislikes++; newLikes--; }
+        else { newDislikes++; }
         return { ...prev, likes: newLikes, dislikes: newDislikes, userInteraction: newInteraction };
       });
       await handleDislike(confession.id);
@@ -351,18 +311,16 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
   };
 
   return (
-    <Card className="w-full overflow-hidden rounded-xl border border-accent/30 bg-black/80 font-mono shadow-[0_0_16px_#00ffe0]">
-      <CardHeader className="flex items-center justify-between px-4 py-2 text-xs text-muted-foreground">
+    <Card className="w-full overflow-hidden rounded-xl border border-accent/40 bg-black/90 font-mono shadow-[0_0_18px_#00ffe0]">
+      <CardHeader className="flex items-center justify-between px-4 py-2 text-xs text-gray-400">
         <div className="flex items-center gap-2">
           <Avatar className="h-6 w-6">
-            <AvatarImage src="/incognito.png" alt="anon" />
+            <AvatarImage src="/icon/dp.png" alt="anon" />
             <AvatarFallback>🕶️</AvatarFallback>
           </Avatar>
-          <span className="truncate text-accent">
-            anon::{confession.anonHash.substring(0, 6)}
-          </span>
+          <span className="truncate text-accent">anon::{confession.anonHash.substring(0, 6)}</span>
         </div>
-        <span className="shrink-0">{timeAgo}</span>
+        <span>{timeAgo}</span>
       </CardHeader>
 
       <CardContent className="px-4 py-2">
@@ -371,20 +329,24 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
 
       <CardFooter className="flex flex-col gap-3 px-4 py-3">
         <div className="flex w-full items-center gap-2">
-          <Button onClick={onLike} disabled={isPending} variant="ghost" className="btn-hacker flex h-9 w-20 items-center justify-center gap-2 p-0">
+          <Button onClick={onLike} disabled={isPending} variant="ghost"
+            className="flex h-9 w-20 items-center justify-center gap-2 p-0 text-gray-400 hover:text-green-400">
             <span className="text-sm font-medium tabular-nums">{confession.likes}</span>
-            <Heart className={`h-4 w-4 transition-colors ${confession.userInteraction === 'like' ? 'fill-current text-string' : 'text-muted-foreground'}`}/>
+            <Heart className={`h-4 w-4 ${confession.userInteraction === 'like' ? 'fill-current text-green-400' : ''}`} />
           </Button>
-          <Button onClick={onDislike} disabled={isPending} variant="ghost" className="btn-hacker flex h-9 w-20 items-center justify-center gap-2 p-0">
+          <Button onClick={onDislike} disabled={isPending} variant="ghost"
+            className="flex h-9 w-20 items-center justify-center gap-2 p-0 text-gray-400 hover:text-red-400">
             <span className="text-sm font-medium tabular-nums">{confession.dislikes}</span>
-            <ThumbsDown className={`h-4 w-4 transition-colors ${confession.userInteraction === 'dislike' ? 'fill-current text-destructive' : 'text-muted-foreground'}`} />
+            <ThumbsDown className={`h-4 w-4 ${confession.userInteraction === 'dislike' ? 'fill-current text-red-400' : ''}`} />
           </Button>
-          <Button onClick={() => setShowComments(!showComments)} variant="ghost" className="btn-hacker flex h-9 w-20 items-center justify-center gap-2 p-0">
+          <Button onClick={() => setShowComments(!showComments)} variant="ghost"
+            className="flex h-9 w-20 items-center justify-center gap-2 p-0 text-gray-400 hover:text-cyan-400">
             <span className="text-sm font-medium tabular-nums">{confession.comments.length}</span>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            <MessageSquare className="h-4 w-4" />
           </Button>
-          <Button onClick={() => onReport(confession.id, 'confession')} disabled={isPending} variant="ghost" className="btn-hacker ml-auto flex h-9 w-20 items-center justify-center p-0">
-            <Flag className="h-4 w-4 text-muted-foreground transition-colors hover:text-destructive" />
+          <Button onClick={() => onReport(confession.id, 'confession')} disabled={isPending} variant="ghost"
+            className="ml-auto flex h-9 w-20 items-center justify-center p-0 text-gray-400 hover:text-red-500">
+            <Flag className="h-4 w-4" />
           </Button>
         </div>
 
