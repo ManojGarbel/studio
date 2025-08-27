@@ -118,71 +118,88 @@ function CommentForm({
 // 🧵 COMMENT THREAD (Recursive)
 // ---------------------------------------------------------------- //
 function CommentThread({
-    comment,
-    onReport,
-    confessionId,
+  comment,
+  onReport,
+  confessionId,
 }: {
-    comment: Comment;
-    onReport: (id: string, type: 'comment') => void;
-    confessionId: string;
+  comment: Comment;
+  onReport: (id: string, type: 'comment') => void;
+  confessionId: string;
 }) {
-    const [isReplying, setIsReplying] = useState(false);
+  const [isReplying, setIsReplying] = useState(false);
 
-    return (
-        <div className="flex flex-col">
-            {/* Main Comment */}
-            <div className="rounded-md border border-secondary/30 bg-secondary/10 p-2 text-xs sm:text-sm">
-              <div className="flex items-center gap-2">
-                <Avatar className="h-5 w-5">
-                  <AvatarImage src="/incognito.png" alt="anon" />
-                  <AvatarFallback>🕶️</AvatarFallback>
-                </Avatar>
-                <p className="text-accent">
-                  anon::{comment.anonHash.substring(0, 6)}
-                  <span className="ml-2 text-muted-foreground">
-                    {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
-                  </span>
-                </p>
-              </div>
-              <p className="mt-1 text-default ml-7">{comment.text}</p>
-              <div className="mt-1 flex gap-2 ml-7">
-                <Button variant="ghost" size="sm" className="btn-hacker h-auto p-1 text-xs" onClick={() => setIsReplying(!isReplying)}>
-                    <CornerDownRight className="mr-1 h-3 w-3" /> Reply
-                </Button>
-                <Button variant="ghost" size="sm" className="btn-hacker h-auto p-1 text-xs" onClick={() => onReport(comment.id, 'comment')}>
-                    <Flag className="mr-1 h-3 w-3" /> Report
-                </Button>
-              </div>
-            </div>
+  return (
+    <div className="flex flex-col">
+      {/* Main Comment */}
+      <div className="flex gap-3 rounded-lg bg-secondary/5 p-3 transition hover:bg-secondary/10">
+        {/* Avatar */}
+        <Avatar className="h-7 w-7 shrink-0">
+          <AvatarImage src="/icon/dp.png" alt="anon" />
+          <AvatarFallback>🕶️</AvatarFallback>
+        </Avatar>
 
-            {/* Replies (recursive) */}
-            {comment.replies && comment.replies.length > 0 && (
-              <div className="ml-6 mt-2 space-y-2 border-l-2 border-accent/20 pl-4">
-                {comment.replies.map((reply) => (
-                  <CommentThread
-                    key={reply.id}
-                    comment={reply}
-                    onReport={onReport}
-                    confessionId={confessionId}
-                  />
-                ))}
-              </div>
-            )}
-            
-            {/* Reply Form */}
-            {isReplying && (
-                <div className="ml-6 mt-2 border-l-2 border-accent/20 pl-4">
-                    <CommentForm
-                        confessionId={confessionId}
-                        parentId={comment.id}
-                        onCommentAdded={() => setIsReplying(false)}
-                        placeholder="> drafting reply..."
-                    />
-                </div>
-            )}
+        {/* Content */}
+        <div className="flex-1">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="font-medium text-accent">
+              anon::{comment.anonHash.substring(0, 6)}
+            </span>
+            <span>•</span>
+            <span>
+              {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
+            </span>
+          </div>
+
+          <p className="mt-1 text-sm leading-relaxed text-default">{comment.text}</p>
+
+          <div className="mt-2 flex gap-3 text-xs">
+            <button
+              onClick={() => setIsReplying(!isReplying)}
+              className="flex items-center gap-1 text-muted-foreground hover:text-accent transition"
+            >
+              <CornerDownRight className="h-3 w-3" />
+              Reply
+            </button>
+            <button
+              onClick={() => onReport(comment.id, 'comment')}
+              className="flex items-center gap-1 text-muted-foreground hover:text-destructive transition"
+            >
+              <Flag className="h-3 w-3" />
+              Report
+            </button>
+          </div>
         </div>
-    );
+      </div>
+
+      {/* Replies */}
+      {comment.replies && comment.replies.length > 0 && (
+        <div className="ml-6 mt-3 space-y-3 border-l border-border pl-4">
+          {comment.replies.map((reply) => (
+            <CommentThread
+              key={reply.id}
+              comment={reply}
+              onReport={onReport}
+              confessionId={confessionId}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Reply Form */}
+      {isReplying && (
+        <div className="ml-6 mt-3 border-l border-accent/20 pl-4">
+          <CommentForm
+            confessionId={confessionId}
+            parentId={comment.id}
+            onCommentAdded={() => setIsReplying(false)}
+            placeholder="> drafting reply..."
+          />
+        </div>
+      )}
+    </div>
+  );
 }
+
 
 // ---------------------------------------------------------------- //
 // 🏛️ COMMENTS SECTION
@@ -199,24 +216,33 @@ function CommentsSection({
     const topLevelComments: Comment[] = [];
 
     for (const comment of confession.comments) {
-        comment.replies = [];
-        commentMap[comment.id] = comment;
+      comment.replies = [];
+      commentMap[comment.id] = comment;
     }
 
     for (const comment of confession.comments) {
-        if (comment.parentId && commentMap[comment.parentId]) {
-            commentMap[comment.parentId].replies?.push(comment);
-        } else {
-            topLevelComments.push(comment);
-        }
+      if (comment.parentId && commentMap[comment.parentId]) {
+        commentMap[comment.parentId].replies?.push(comment);
+      } else {
+        topLevelComments.push(comment);
+      }
     }
     return topLevelComments;
   }, [confession.comments]);
 
   return (
-    <div className="w-full space-y-3 border-t border-accent/20 pt-3 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-accent/40">
-      <CommentForm confessionId={confession.id} onCommentAdded={() => {}} />
-      <div className="space-y-3">
+    <div className="w-full space-y-4 border-t border-accent/20 pt-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-accent/40">
+      {/* Comment Input */}
+      <div className="flex items-start gap-3">
+        <Avatar className="h-7 w-7 shrink-0">
+          <AvatarImage src="/icon/dp.png" alt="anon" />
+          <AvatarFallback>🕶️</AvatarFallback>
+        </Avatar>
+        <CommentForm confessionId={confession.id} onCommentAdded={() => {}} />
+      </div>
+
+      {/* Thread */}
+      <div className="space-y-4">
         {nestedComments.map((comment) => (
           <CommentThread
             key={comment.id}
@@ -229,6 +255,7 @@ function CommentsSection({
     </div>
   );
 }
+
 
 // ---------------------------------------------------------------- //
 // 🃏 MAIN CONFESSION CARD
