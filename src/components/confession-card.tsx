@@ -7,7 +7,7 @@ import {
   CardHeader,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import type { Confession as BaseConfession, Comment as BaseComment } from '@/lib/types'; // Assuming types are in lib/types
+import type { Confession as BaseConfession, Comment as BaseComment } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 import { Heart, MessageSquare, Flag, ThumbsDown, Send, CornerDownRight } from 'lucide-react';
 import { useState, useTransition, useRef, useEffect, useMemo, FormEvent } from 'react';
@@ -20,17 +20,16 @@ import {
 } from '@/lib/actions';
 import { Textarea } from './ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import Cookies from 'js-cookie';
 import useSound from '@/hooks/use-sound';
 import { SOUNDS } from '@/lib/sounds';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // ✅ for DP
 
 // ---------------------------------------------------------------- //
-// 📄 TYPE DEFINITIONS (Updated to support replies)
+// 📄 TYPE DEFINITIONS
 // ---------------------------------------------------------------- //
-// NOTE: Your actual types in '@/lib/types' should be updated to match this structure.
 interface Comment extends BaseComment {
   parentId: string | null;
-  replies?: Comment[]; // Added for nesting on the client-side
+  replies?: Comment[];
 }
 
 interface Confession extends BaseConfession {
@@ -38,7 +37,7 @@ interface Confession extends BaseConfession {
 }
 
 // ---------------------------------------------------------------- //
-// 🎨 SYNTAX HIGHLIGHTER (No changes)
+// 🎨 SYNTAX HIGHLIGHTER
 // ---------------------------------------------------------------- //
 const SYNTAX_HIGHLIGHT_COLORS = { keyword: 'text-keyword', string: 'text-string', number: 'text-number', default: 'text-default' };
 const KEYWORDS = ['fix','bug','error','pushed','main','production','friday','debug','console.log','git','commit','database','server','client','react','javascript','typescript','css','html','python','java','c#','c++','php','ruby','go','rust','sql'];
@@ -61,7 +60,7 @@ const CodeSyntaxHighlighter = ({ text }: { text: string }) => {
 };
 
 // ---------------------------------------------------------------- //
-// 💬 NEW: COMMENT FORM COMPONENT
+// 💬 COMMENT FORM
 // ---------------------------------------------------------------- //
 function CommentForm({
   confessionId,
@@ -88,11 +87,10 @@ function CommentForm({
 
     playCommentSound();
     startTransition(async () => {
-      // Assumes `addComment` is updated to accept a parentId
       const result = await addComment(confessionId, formData, parentId);
       if (result?.success) {
         formRef.current?.reset();
-        onCommentAdded(); // Callback to close the reply form
+        onCommentAdded();
       } else if (result?.message) {
         toast({ variant: 'destructive', title: 'Error', description: result.message });
       }
@@ -117,7 +115,7 @@ function CommentForm({
 }
 
 // ---------------------------------------------------------------- //
-// 🧵 NEW: COMMENT THREAD COMPONENT
+// 🧵 COMMENT THREAD (Recursive)
 // ---------------------------------------------------------------- //
 function CommentThread({
     comment,
@@ -134,43 +132,46 @@ function CommentThread({
         <div className="flex flex-col">
             {/* Main Comment */}
             <div className="rounded-md border border-secondary/30 bg-secondary/10 p-2 text-xs sm:text-sm">
+              <div className="flex items-center gap-2">
+                <Avatar className="h-5 w-5">
+                  <AvatarImage src="/incognito.png" alt="anon" />
+                  <AvatarFallback>🕶️</AvatarFallback>
+                </Avatar>
                 <p className="text-accent">
-                    anon::{comment.anonHash.substring(0, 6)}
-                    <span className="ml-2 text-muted-foreground">
-                        {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
-                    </span>
+                  anon::{comment.anonHash.substring(0, 6)}
+                  <span className="ml-2 text-muted-foreground">
+                    {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
+                  </span>
                 </p>
-                <p className="mt-1 text-default">{comment.text}</p>
-                <div className="mt-1 flex gap-2">
-                    <Button variant="ghost" size="sm" className="btn-hacker h-auto p-1 text-xs" onClick={() => setIsReplying(!isReplying)}>
-                        <CornerDownRight className="mr-1 h-3 w-3" /> Reply
-                    </Button>
-                    <Button variant="ghost" size="sm" className="btn-hacker h-auto p-1 text-xs" onClick={() => onReport(comment.id, 'comment')}>
-                        <Flag className="mr-1 h-3 w-3" /> Report
-                    </Button>
-                </div>
+              </div>
+              <p className="mt-1 text-default ml-7">{comment.text}</p>
+              <div className="mt-1 flex gap-2 ml-7">
+                <Button variant="ghost" size="sm" className="btn-hacker h-auto p-1 text-xs" onClick={() => setIsReplying(!isReplying)}>
+                    <CornerDownRight className="mr-1 h-3 w-3" /> Reply
+                </Button>
+                <Button variant="ghost" size="sm" className="btn-hacker h-auto p-1 text-xs" onClick={() => onReport(comment.id, 'comment')}>
+                    <Flag className="mr-1 h-3 w-3" /> Report
+                </Button>
+              </div>
             </div>
 
-            {/* Replies Section */}
+            {/* Replies (recursive) */}
             {comment.replies && comment.replies.length > 0 && (
-                <div className="ml-4 mt-2 space-y-2 border-l-2 border-accent/20 pl-4">
-                    {comment.replies.map((reply) => (
-                        <div key={reply.id} className="rounded-md border border-secondary/30 bg-secondary/20 p-2 text-xs">
-                             <p className="text-accent">
-                                anon::{reply.anonHash.substring(0, 6)}
-                                <span className="ml-2 text-muted-foreground">
-                                    {formatDistanceToNow(new Date(reply.timestamp), { addSuffix: true })}
-                                </span>
-                            </p>
-                            <p className="mt-1 text-default">{reply.text}</p>
-                        </div>
-                    ))}
-                </div>
+              <div className="ml-6 mt-2 space-y-2 border-l-2 border-accent/20 pl-4">
+                {comment.replies.map((reply) => (
+                  <CommentThread
+                    key={reply.id}
+                    comment={reply}
+                    onReport={onReport}
+                    confessionId={confessionId}
+                  />
+                ))}
+              </div>
             )}
             
             {/* Reply Form */}
             {isReplying && (
-                <div className="ml-4 mt-2 border-l-2 border-accent/20 pl-4">
+                <div className="ml-6 mt-2 border-l-2 border-accent/20 pl-4">
                     <CommentForm
                         confessionId={confessionId}
                         parentId={comment.id}
@@ -183,9 +184,8 @@ function CommentThread({
     );
 }
 
-
 // ---------------------------------------------------------------- //
-// 🏛️ NEW: COMMENTS SECTION COMPONENT
+// 🏛️ COMMENTS SECTION
 // ---------------------------------------------------------------- //
 function CommentsSection({
   confession,
@@ -194,18 +194,15 @@ function CommentsSection({
   confession: Confession;
   onReport: (id: string, type: 'comment') => void;
 }) {
-  // Memoized logic to nest comments
   const nestedComments = useMemo(() => {
     const commentMap: Record<string, Comment> = {};
     const topLevelComments: Comment[] = [];
 
-    // First pass: create a map of all comments by their ID
     for (const comment of confession.comments) {
-        comment.replies = []; // Initialize replies array
+        comment.replies = [];
         commentMap[comment.id] = comment;
     }
 
-    // Second pass: link replies to their parents
     for (const comment of confession.comments) {
         if (comment.parentId && commentMap[comment.parentId]) {
             commentMap[comment.parentId].replies?.push(comment);
@@ -218,10 +215,7 @@ function CommentsSection({
 
   return (
     <div className="w-full space-y-3 border-t border-accent/20 pt-3 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-accent/40">
-      {/* Form for new top-level comments */}
       <CommentForm confessionId={confession.id} onCommentAdded={() => {}} />
-
-      {/* Render comment threads */}
       <div className="space-y-3">
         {nestedComments.map((comment) => (
           <CommentThread
@@ -236,9 +230,8 @@ function CommentsSection({
   );
 }
 
-
 // ---------------------------------------------------------------- //
-// 🃏 MAIN CONFESSION CARD COMPONENT (Updated)
+// 🃏 MAIN CONFESSION CARD
 // ---------------------------------------------------------------- //
 export function ConfessionCard({ confession: initialConfession }: { confession: Confession }) {
   const [isPending, startTransition] = useTransition();
@@ -258,57 +251,51 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
     () => formatDistanceToNow(new Date(confession.timestamp), { addSuffix: true }),
     [confession.timestamp]
   );
-  
-  // ✅ FIXED: Like handler with optimistic UI update
+
   const onLike = () => {
     playLikeSound();
     startTransition(async () => {
-      // Update UI immediately
       setConfession(prev => {
         let newLikes = prev.likes;
         let newDislikes = prev.dislikes;
         let newInteraction: 'like' | 'dislike' | null = 'like';
 
-        if (prev.userInteraction === 'like') { // Case 1: User is un-liking
+        if (prev.userInteraction === 'like') {
           newLikes--;
           newInteraction = null;
-        } else if (prev.userInteraction === 'dislike') { // Case 2: User changes from dislike to like
+        } else if (prev.userInteraction === 'dislike') {
           newLikes++;
           newDislikes--;
-        } else { // Case 3: User is liking for the first time
+        } else {
           newLikes++;
         }
 
         return { ...prev, likes: newLikes, dislikes: newDislikes, userInteraction: newInteraction };
       });
-      // Send request to server
       await handleLike(confession.id);
     });
   };
 
-  // ✅ FIXED: Dislike handler with optimistic UI update
   const onDislike = () => {
     playDislikeSound();
     startTransition(async () => {
-      // Update UI immediately
       setConfession(prev => {
         let newLikes = prev.likes;
         let newDislikes = prev.dislikes;
         let newInteraction: 'like' | 'dislike' | null = 'dislike';
 
-        if (prev.userInteraction === 'dislike') { // Case 1: User is un-disliking
+        if (prev.userInteraction === 'dislike') {
           newDislikes--;
           newInteraction = null;
-        } else if (prev.userInteraction === 'like') { // Case 2: User changes from like to dislike
+        } else if (prev.userInteraction === 'like') {
           newDislikes++;
           newLikes--;
-        } else { // Case 3: User is disliking for the first time
+        } else {
           newDislikes++;
         }
 
         return { ...prev, likes: newLikes, dislikes: newDislikes, userInteraction: newInteraction };
       });
-      // Send request to server
       await handleDislike(confession.id);
     });
   };
@@ -326,9 +313,15 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
   return (
     <Card className="w-full overflow-hidden rounded-xl border border-accent/30 bg-black/80 font-mono shadow-[0_0_16px_#00ffe0]">
       <CardHeader className="flex items-center justify-between px-4 py-2 text-xs text-muted-foreground">
-        <span className="truncate text-accent">
-          anon::{confession.anonHash.substring(0, 6)}
-        </span>
+        <div className="flex items-center gap-2">
+          <Avatar className="h-6 w-6">
+            <AvatarImage src="/incognito.png" alt="anon" />
+            <AvatarFallback>🕶️</AvatarFallback>
+          </Avatar>
+          <span className="truncate text-accent">
+            anon::{confession.anonHash.substring(0, 6)}
+          </span>
+        </div>
         <span className="shrink-0">{timeAgo}</span>
       </CardHeader>
 
