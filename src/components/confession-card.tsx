@@ -102,11 +102,14 @@ function CommentForm({
         required
         disabled={isPending}
         onInput={handleTextareaInput}
-        className="flex-1 rounded-full border-2 border-slate-700 bg-slate-800/80 px-4 py-2 font-body text-sm text-slate-200 resize-none overflow-y-hidden focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+        // ✨ MODIFIED: Reduced padding for a shorter input box
+        className="flex-1 rounded-full border-2 border-slate-700 bg-slate-800/80 px-4 py-1.5 font-body text-sm text-slate-200 resize-none overflow-y-hidden focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
         style={{ maxHeight: '120px' }}
       />
-      <Button type="submit" size="icon" disabled={isPending} className="bg-sky-500 hover:bg-sky-600 text-white rounded-full h-10 w-10 shrink-0 active:scale-90 transition-all">
-        <Send className="h-5 w-5" />
+      <Button type="submit" size="icon" disabled={isPending} 
+        // ✨ MODIFIED: Reduced button size to match new input height
+        className="bg-sky-500 hover:bg-sky-600 text-white rounded-full h-9 w-9 shrink-0 active:scale-90 transition-all">
+        <Send className="h-4 w-4" />
       </Button>
     </form>
   );
@@ -200,7 +203,7 @@ function CommentsSection({
   return (
     <div className="w-full space-y-4 pt-4 border-t border-slate-700/50 max-h-96 overflow-y-auto" style={{ scrollBehavior: 'smooth' }}>
       <div className="flex items-start gap-2 pr-1">
-        <Avatar className="h-9 w-9 shrink-0 mt-0.5">
+        <Avatar className="h-9 w-9 shrink-0">
           <AvatarImage src="/icons/dp.png" alt="User Avatar" />
           <AvatarFallback>🕶️</AvatarFallback>
         </Avatar>
@@ -229,12 +232,51 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
   const refresh = () => setConfession(prev => ({...prev}));
   const timeAgo = useMemo(() => formatDistanceToNow(new Date(confession.timestamp), { addSuffix: true }), [confession.timestamp]);
 
-  const onLike = () => { playLikeSound(); startTransition(async () => { /* ... */ }); };
-  const onDislike = () => { playDislikeSound(); startTransition(async () => { /* ... */ }); };
-  const onReport = (id: string, type: 'confession' | 'comment') => { playReportSound(); startTransition(async () => { /* ... */ }); };
+  // ✨ FIXED: Added back the logic for immediate UI updates
+  const onLike = () => {
+    playLikeSound();
+    startTransition(async () => {
+      setConfession(prev => {
+        let newLikes = prev.likes, newDislikes = prev.dislikes;
+        let newInteraction: 'like' | 'dislike' | null = 'like';
+        if (prev.userInteraction === 'like') { newLikes--; newInteraction = null; }
+        else if (prev.userInteraction === 'dislike') { newLikes++; newDislikes--; }
+        else { newLikes++; }
+        return { ...prev, likes: newLikes, dislikes: newDislikes, userInteraction: newInteraction };
+      });
+      await handleLike(confession.id);
+    });
+  };
+
+  // ✨ FIXED: Added back the logic for immediate UI updates
+  const onDislike = () => {
+    playDislikeSound();
+    startTransition(async () => {
+      setConfession(prev => {
+        let newLikes = prev.likes, newDislikes = prev.dislikes;
+        let newInteraction: 'like' | 'dislike' | null = 'dislike';
+        if (prev.userInteraction === 'dislike') { newDislikes--; newInteraction = null; }
+        else if (prev.userInteraction === 'like') { newDislikes++; newLikes--; }
+        else { newDislikes++; }
+        return { ...prev, likes: newLikes, dislikes: newDislikes, userInteraction: newInteraction };
+      });
+      await handleDislike(confession.id);
+    });
+  };
+
+  const onReport = (id: string, type: 'confession' | 'comment') => {
+    playReportSound();
+    startTransition(async () => {
+      const action = type === 'confession' ? reportConfession : reportComment;
+      const result = await action(id);
+      if (result?.success) toast({ title: 'Reported', description: result.message });
+      else if (result?.message) toast({ variant: 'destructive', title: 'Error', description: result.message });
+    });
+  };
 
   return (
-    <Card className="w-full overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-900/50 backdrop-blur-xl font-body shadow-lg shadow-sky-500/10">
+    // ✨ MODIFIED: Changed background to transparent black
+    <Card className="w-full overflow-hidden rounded-2xl border border-slate-700/50 bg-black/70 backdrop-blur-xl font-body shadow-lg shadow-sky-500/10">
       <CardHeader className="flex flex-row items-center gap-3 p-4">
         <Avatar className="h-10 w-10">
           <AvatarImage src="/icons/dp.png" alt="User Avatar" />
