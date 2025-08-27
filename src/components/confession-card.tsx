@@ -314,7 +314,7 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
     <Card className="w-full overflow-hidden rounded-xl border border-accent/40 bg-black/90 font-mono shadow-[0_0_18px_#00ffe0]">
       {/* Header: DP + name + time */}
       <CardHeader className="flex items-center justify-between px-4 py-2 text-xs text-gray-400">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <Avatar className="h-6 w-6">
             <AvatarImage src="/icons/dp.png" alt="anon" />
             <AvatarFallback>🕶️</AvatarFallback>
