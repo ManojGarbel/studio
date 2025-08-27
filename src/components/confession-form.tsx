@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { submitConfession } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
+import { Terminal } from 'lucide-react';
 import useSound from '@/hooks/use-sound';
 import { SOUNDS } from '@/lib/sounds';
 
@@ -19,7 +20,7 @@ function CharacterCounter({ count }: { count: number }) {
   return (
     <div
       className={`font-mono text-xs transition-colors ${
-        isOverLimit ? 'text-red-500' : 'text-green-400/70'
+        isOverLimit ? 'text-red-500' : 'text-green-500/60'
       }`}
     >
       <span>char_count: {count}/{MAX_LENGTH}</span>
@@ -27,31 +28,28 @@ function CharacterCounter({ count }: { count: number }) {
   );
 }
 
-/* 🚀 Mobile-friendly CLI Submit Button */
+/* 🚀 CLI-style Submit Button */
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button
       type="submit"
       disabled={pending}
-      className="w-full sm:w-auto font-mono text-sm text-black bg-green-400 border border-green-500 
-                 rounded-xl px-4 py-2 transition-all shadow-[0_0_12px_rgba(57,255,20,0.6)]
-                 hover:bg-green-300 hover:shadow-[0_0_18px_rgba(57,255,20,0.8)]
-                 active:translate-y-[2px] active:shadow-none disabled:opacity-60"
+      className="font-mono text-sm text-green-400 bg-transparent border border-green-400 rounded-none h-auto px-4 py-1 hover:bg-green-400/10 hover:shadow-[0_0_15px_rgba(57,255,20,0.5)] active:scale-95 transition-all"
     >
       {pending ? (
         <span className="flex items-center gap-2">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent border-black"></span>
-          <span>sending...</span>
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent border-green-400"></span>
+          <span>submitting...</span>
         </span>
       ) : (
-        <span className="tracking-wider">[ Submit ]</span>
+        <span>[ Submit ]</span>
       )}
     </Button>
   );
 }
 
-/* 📝 Main Hacker Terminal Form */
+/* 📝 Main Hacker Terminal Form Component */
 export default function ConfessionForm() {
   const { toast } = useToast();
   const [state, formAction] = useActionState(submitConfession, {
@@ -83,40 +81,35 @@ export default function ConfessionForm() {
   }, [state, toast, playSubmitSound]);
 
   return (
-    <div className="w-full max-w-3xl mx-auto p-6 font-mono">
-      <form
-        action={formAction}
-        ref={formRef}
-        className="flex flex-col gap-4 rounded-2xl border border-green-500/40 bg-[#0d0d0d]/95 
-                   shadow-[0_0_25px_rgba(57,255,20,0.4)] p-6"
-      >
+    <div className="w-full max-w-2xl mx-auto p-4 font-mono bg-[#0a0a0a]">
+      <form action={formAction} ref={formRef} className="flex flex-col gap-4">
         {/* Terminal Header */}
-        <label
-          htmlFor="confession-input"
-          className="text-green-400 text-base sm:text-lg tracking-wide"
-        >
-          $ enter_confession:
-        </label>
+        <div className="flex items-center gap-2 text-xl sm:text-2xl text-green-400">
+            <Terminal className="h-5 w-5" />
+            <h2 className="cursor-blink">Confess Now</h2>
+        </div>
+        <p className="text-xs text-green-600 sm:text-sm -mt-2">
+            Your transmission is anonymous and encrypted.
+        </p>
 
-        {/* Terminal Input */}
+        {/* Terminal Input Area */}
         <Textarea
-          id="confession-input"
           name="confession"
-          placeholder="> I once pushed directly to main on Friday..."
-          rows={6}
+          placeholder="> I once pushed directly to the main branch on a Friday..."
+          rows={5}
           required
           minLength={10}
           maxLength={MAX_LENGTH}
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="bg-transparent border-2 border-green-500/40 rounded-xl p-3 text-base text-green-300 resize-none
-                     shadow-[0_0_12px_rgba(57,255,20,0.2)]
-                     focus:border-green-400 focus:shadow-[0_0_20px_rgba(57,255,20,0.6)]
+          className="bg-transparent border-2 border-green-400/30 rounded-md p-3 text-base text-green-300 resize-none
+                     shadow-[0_0_10px_rgba(57,255,20,0.2)]
+                     focus:border-green-400 focus:shadow-[0_0_20px_rgba(57,255,20,0.5)]
                      focus:ring-0 focus:outline-none transition-all duration-300"
         />
 
-        {/* Footer */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+        {/* Terminal Footer */}
+        <div className="flex items-center justify-between mt-2">
           <CharacterCounter count={content.length} />
           <SubmitButton />
         </div>
