@@ -29,7 +29,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; //
 // ---------------------------------------------------------------- //
 interface Comment extends BaseComment {
   parentId: string | null;
-  replies?: Comment[];
+  replies: Comment[]; // ✅ required, not optional
 }
 
 interface Confession extends BaseConfession {
@@ -121,10 +121,12 @@ function CommentThread({
   comment,
   onReport,
   confessionId,
+  refresh,
 }: {
   comment: Comment;
   onReport: (id: string, type: 'comment') => void;
   confessionId: string;
+  refresh: () => void;
 }) {
   const [isReplying, setIsReplying] = useState(false);
 
@@ -180,6 +182,7 @@ function CommentThread({
               comment={reply}
               onReport={onReport}
               confessionId={confessionId}
+              refresh={refresh}
             />
           ))}
         </div>
@@ -191,7 +194,10 @@ function CommentThread({
           <CommentForm
             confessionId={confessionId}
             parentId={comment.id}
-            onCommentAdded={() => setIsReplying(false)}
+            onCommentAdded={() => {
+              setIsReplying(false);
+              refresh();
+            }}
             placeholder="> drafting reply..."
           />
         </div>
@@ -200,34 +206,36 @@ function CommentThread({
   );
 }
 
-
 // ---------------------------------------------------------------- //
 // 🏛️ COMMENTS SECTION
 // ---------------------------------------------------------------- //
 function CommentsSection({
   confession,
   onReport,
+  refresh,
 }: {
   confession: Confession;
   onReport: (id: string, type: 'comment') => void;
+  refresh: () => void;
 }) {
   const nestedComments = useMemo(() => {
     const commentMap: Record<string, Comment> = {};
-    const topLevelComments: Comment[] = [];
+    const topLevel: Comment[] = [];
 
-    for (const comment of confession.comments) {
-      comment.replies = [];
-      commentMap[comment.id] = comment;
-    }
+    // clone with replies array to avoid mutation issues
+    confession.comments.forEach((c) => {
+      commentMap[c.id] = { ...c, replies: [] };
+    });
 
-    for (const comment of confession.comments) {
-      if (comment.parentId && commentMap[comment.parentId]) {
-        commentMap[comment.parentId].replies?.push(comment);
+    confession.comments.forEach((c) => {
+      if (c.parentId && commentMap[c.parentId]) {
+        commentMap[c.parentId].replies.push(commentMap[c.id]);
       } else {
-        topLevelComments.push(comment);
+        topLevel.push(commentMap[c.id]);
       }
-    }
-    return topLevelComments;
+    });
+
+    return topLevel;
   }, [confession.comments]);
 
   return (
@@ -238,7 +246,7 @@ function CommentsSection({
           <AvatarImage src="/icon/dp.png" alt="anon" />
           <AvatarFallback>🕶️</AvatarFallback>
         </Avatar>
-        <CommentForm confessionId={confession.id} onCommentAdded={() => {}} />
+        <CommentForm confessionId={confession.id} onCommentAdded={refresh} />
       </div>
 
       {/* Thread */}
@@ -249,13 +257,13 @@ function CommentsSection({
             comment={comment}
             onReport={onReport}
             confessionId={confession.id}
+            refresh={refresh}
           />
         ))}
       </div>
     </div>
   );
 }
-
 
 // ---------------------------------------------------------------- //
 // 🃏 MAIN CONFESSION CARD
@@ -273,6 +281,11 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
   useEffect(() => {
     setConfession(initialConfession);
   }, [initialConfession]);
+
+  const refresh = () => {
+    // 🔄 refetch or reload comments from server if needed
+    setConfession((prev) => ({ ...prev }));
+  };
 
   const timeAgo = useMemo(
     () => formatDistanceToNow(new Date(confession.timestamp), { addSuffix: true }),
@@ -375,7 +388,7 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
           </Button>
         </div>
 
-        {showComments && <CommentsSection confession={confession} onReport={onReport} />}
+        {showComments && <CommentsSection confession={confession} onReport={onReport} refresh={refresh} />}
       </CardFooter>
     </Card>
   );
