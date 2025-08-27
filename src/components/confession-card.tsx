@@ -314,24 +314,25 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
 
             const file = new File([blob], "confession.png", { type: "image/png" });
             
-            // ✨ MODIFIED: Updated share text and added URL
+            // ✨ MODIFIED: The link is now part of the main text to ensure it's always visible.
             const shareData = {
                 title: "Dev Confession on Concode",
-                text: "Sensation on Concode! Check out this anonymous dev confession:",
-                url: "https://concode.vercel.app/",
+                text: "Sensation on Concode! Check out this anonymous dev confession: https://concode.vercel.app/",
                 files: [file],
             };
 
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share(shareData);
             } else {
+                // The 'url' field is not supported when sharing files on many platforms,
+                // so we rely on the text field. This error is for browsers that can't share files at all.
                 throw new Error("File sharing not supported.");
             }
         }, 'image/png');
 
     } catch (err) {
-      // ✨ MODIFIED: Updated clipboard fallback text
-      const fallbackText = `Sensation on Concode! Check out this anonymous confession:\n\n"${confession.text}"\n\nRead more at: https://concode.vercel.app/`;
+      // ✨ MODIFIED: The clipboard fallback text also includes the link.
+      const fallbackText = `Sensation on Concode! Check out this anonymous dev confession:\n\n"${confession.text}"\n\nRead more at: https://concode.vercel.app/`;
       const textArea = document.createElement("textarea");
       textArea.value = fallbackText;
       document.body.appendChild(textArea);
