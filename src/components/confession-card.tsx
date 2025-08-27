@@ -19,7 +19,6 @@ import useSound from '@/hooks/use-sound';
 import { SOUNDS } from '@/lib/sounds';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from '@/lib/utils';
-// ✨ NEW: Import Script to use html2canvas from a CDN
 import Script from 'next/script';
 
 
@@ -227,7 +226,6 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
   const [confession, setConfession] = useState(initialConfession);
   const [showReportMenu, setShowReportMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  // ✨ NEW: Ref for the card element to be screenshotted
   const cardRef = useRef<HTMLDivElement>(null);
 
   const playLikeSound = useSound(SOUNDS.like, 0.2);
@@ -293,9 +291,7 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
     });
   };
   
-  // ✨ MODIFIED: Implemented image sharing functionality
   const onShare = async () => {
-    // Ensure the card element and html2canvas library are available
     if (!cardRef.current || typeof (window as any).html2canvas === 'undefined') {
         toast({ variant: "destructive", title: "Error", description: "Could not generate share image." });
         return;
@@ -305,10 +301,9 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
 
     try {
         const canvas = await (window as any).html2canvas(cardRef.current, {
-            // Options to improve image quality and rendering
             useCORS: true,
-            backgroundColor: null, // Use the element's background
-            scale: 2, // Render at a higher resolution
+            backgroundColor: null,
+            scale: 2,
         });
 
         canvas.toBlob(async (blob: Blob | null) => {
@@ -318,27 +313,27 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
             }
 
             const file = new File([blob], "confession.png", { type: "image/png" });
+            
+            // ✨ MODIFIED: Updated share text and added URL
             const shareData = {
-                title: "Dev Confession",
-                text: `Check out this confession:\n\n"${confession.text}"`,
+                title: "Dev Confession on Concode",
+                text: "Sensation on Concode! Check out this anonymous dev confession:",
+                url: "https://concode.vercel.app/",
                 files: [file],
-                 // You could add a URL to the specific confession if your app supports it
-                 // url: `https://yourapp.com/confession/${confession.id}` 
             };
 
-            // Check if the browser supports sharing files
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share(shareData);
             } else {
-                // Fallback for browsers that don't support file sharing (e.g., some desktops)
                 throw new Error("File sharing not supported.");
             }
         }, 'image/png');
 
     } catch (err) {
-      // Fallback for desktop or if sharing fails: copy to clipboard
+      // ✨ MODIFIED: Updated clipboard fallback text
+      const fallbackText = `Sensation on Concode! Check out this anonymous confession:\n\n"${confession.text}"\n\nRead more at: https://concode.vercel.app/`;
       const textArea = document.createElement("textarea");
-      textArea.value = confession.text;
+      textArea.value = fallbackText;
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
@@ -362,7 +357,6 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
 
   return (
     <>
-      {/* ✨ NEW: This loads the html2canvas library, making it available on the window object */}
       <Script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" strategy="lazyOnload" />
       <Card ref={cardRef} className="w-full overflow-hidden rounded-2xl border border-slate-700/50 bg-black/70 backdrop-blur-xl font-body shadow-lg shadow-sky-500/10">
         <CardHeader className="flex flex-row items-center justify-between p-4">
