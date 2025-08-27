@@ -4,7 +4,6 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button';
 import type { Confession as BaseConfession, Comment as BaseComment } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
-// ✨ MODIFIED: Imported new icons for Share and MoreVertical
 import { Heart, MessageSquare, Flag, ThumbsDown, Send, CornerDownRight, MoreVertical, Share2 } from 'lucide-react';
 import { useState, useTransition, useRef, useEffect, useMemo, FormEvent, ChangeEvent } from 'react';
 import {
@@ -141,7 +140,6 @@ function CommentThread({
                 <span>•</span>
                 <span>{formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}</span>
             </div>
-            {/* ✨ NEW: Report button for individual comments */}
             <button onClick={() => onReport(comment.id, 'comment')} className="text-slate-500 hover:text-red-400 transition active:scale-95">
                 <Flag className="h-3.5 w-3.5" />
             </button>
@@ -224,12 +222,30 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
   const [isPending, startTransition] = useTransition();
   const [showComments, setShowComments] = useState(false);
   const [confession, setConfession] = useState(initialConfession);
+  // ✨ NEW: State to control the visibility of the report menu
+  const [showReportMenu, setShowReportMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
   const playLikeSound = useSound(SOUNDS.like, 0.2);
   const playDislikeSound = useSound(SOUNDS.dislike, 0.2);
   const playReportSound = useSound(SOUNDS.report);
   const { toast } = useToast();
 
   useEffect(() => { setConfession(initialConfession); }, [initialConfession]);
+
+  // ✨ NEW: Effect to close the menu when clicking outside of it
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowReportMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [menuRef]);
+
   const refresh = () => setConfession(prev => ({...prev}));
   const timeAgo = useMemo(() => formatDistanceToNow(new Date(confession.timestamp), { addSuffix: true }), [confession.timestamp]);
 
@@ -270,21 +286,19 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
       const result = await action(id);
       if (result?.success) toast({ title: 'Reported', description: result.message });
       else if (result?.message) toast({ variant: 'destructive', title: 'Error', description: result.message });
+      setShowReportMenu(false); // Close menu after reporting
     });
   };
   
-  // ✨ NEW: Placeholder function for the share button
   const onShare = () => {
     toast({
       title: "Share Feature",
       description: "This is where the share functionality will be implemented.",
     });
-    // You can add navigator.share logic here in the future
   };
 
   return (
     <Card className="w-full overflow-hidden rounded-2xl border border-slate-700/50 bg-black/70 backdrop-blur-xl font-body shadow-lg shadow-sky-500/10">
-      {/* ✨ MODIFIED: Header now includes the report button */}
       <CardHeader className="flex flex-row items-center justify-between p-4">
         <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
@@ -296,9 +310,26 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
               <p className="text-slate-400">{timeAgo}</p>
             </div>
         </div>
-        <Button onClick={() => onReport(confession.id, 'confession')} disabled={isPending} variant="ghost" size="icon" className="h-10 w-10 rounded-full text-slate-400 transition-all duration-200 hover:bg-red-500/10 hover:text-red-400 active:scale-90">
-            <MoreVertical className="h-5 w-5" />
-        </Button>
+        {/* ✨ MODIFIED: This container is now relative for positioning the menu */}
+        <div className="relative" ref={menuRef}>
+            <Button onClick={() => setShowReportMenu(!showReportMenu)} disabled={isPending} variant="ghost" size="icon" className="h-10 w-10 rounded-full text-slate-400 transition-all duration-200 hover:bg-slate-800/50 active:scale-90">
+                <MoreVertical className="h-5 w-5" />
+            </Button>
+            {/* ✨ NEW: The report popover menu */}
+            {showReportMenu && (
+                <div className="absolute top-12 right-0 z-10 w-40 origin-top-right rounded-md bg-slate-800/90 backdrop-blur-md border border-slate-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none animate-fade-in-slow">
+                    <div className="py-1">
+                        <button
+                            onClick={() => onReport(confession.id, 'confession')}
+                            className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-red-500/10"
+                        >
+                            <Flag className="mr-3 h-5 w-5" />
+                            <span>Report</span>
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
       </CardHeader>
 
       <CardContent className="px-4 pb-2">
@@ -306,7 +337,6 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
       </CardContent>
 
       <CardFooter className="flex flex-col gap-3 p-4">
-        {/* ✨ MODIFIED: Share button replaces the old report button */}
         <div className="flex w-full items-center">
           <div className="flex items-center gap-1">
             <Button onClick={onLike} disabled={isPending} variant="ghost" className="flex h-10 w-16 items-center justify-center gap-2 rounded-full p-0 text-slate-400 transition-all duration-200 hover:bg-green-500/10 active:scale-90">
