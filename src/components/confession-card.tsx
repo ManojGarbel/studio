@@ -19,6 +19,9 @@ import useSound from '@/hooks/use-sound';
 import { SOUNDS } from '@/lib/sounds';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from '@/lib/utils';
+// ✨ NEW: Import Script to use html2canvas from a CDN
+import Script from 'next/script';
+
 
 // --- TYPE DEFINITIONS ---
 interface Comment extends BaseComment {
@@ -222,9 +225,10 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
   const [isPending, startTransition] = useTransition();
   const [showComments, setShowComments] = useState(false);
   const [confession, setConfession] = useState(initialConfession);
-  // ✨ NEW: State to control the visibility of the report menu
   const [showReportMenu, setShowReportMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  // ✨ NEW: Ref for the card element to be screenshotted
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const playLikeSound = useSound(SOUNDS.like, 0.2);
   const playDislikeSound = useSound(SOUNDS.dislike, 0.2);
@@ -233,7 +237,6 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
 
   useEffect(() => { setConfession(initialConfession); }, [initialConfession]);
 
-  // ✨ NEW: Effect to close the menu when clicking outside of it
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -286,83 +289,145 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
       const result = await action(id);
       if (result?.success) toast({ title: 'Reported', description: result.message });
       else if (result?.message) toast({ variant: 'destructive', title: 'Error', description: result.message });
-      setShowReportMenu(false); // Close menu after reporting
+      setShowReportMenu(false);
     });
   };
   
-  const onShare = () => {
-    toast({
-      title: "Share Feature",
-      description: "This is where the share functionality will be implemented.",
-    });
+  // ✨ MODIFIED: Implemented image sharing functionality
+  const onShare = async () => {
+    // Ensure the card element and html2canvas library are available
+    if (!cardRef.current || typeof (window as any).html2canvas === 'undefined') {
+        toast({ variant: "destructive", title: "Error", description: "Could not generate share image." });
+        return;
+    }
+
+    toast({ title: "Please wait", description: "Preparing share image..." });
+
+    try {
+        const canvas = await (window as any).html2canvas(cardRef.current, {
+            // Options to improve image quality and rendering
+            useCORS: true,
+            backgroundColor: null, // Use the element's background
+            scale: 2, // Render at a higher resolution
+        });
+
+        canvas.toBlob(async (blob: Blob | null) => {
+            if (!blob) {
+                toast({ variant: "destructive", title: "Error", description: "Failed to create image." });
+                return;
+            }
+
+            const file = new File([blob], "confession.png", { type: "image/png" });
+            const shareData = {
+                title: "Dev Confession",
+                text: `Check out this confession:\n\n"${confession.text}"`,
+                files: [file],
+                 // You could add a URL to the specific confession if your app supports it
+                 // url: `https://yourapp.com/confession/${confession.id}` 
+            };
+
+            // Check if the browser supports sharing files
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share(shareData);
+            } else {
+                // Fallback for browsers that don't support file sharing (e.g., some desktops)
+                throw new Error("File sharing not supported.");
+            }
+        }, 'image/png');
+
+    } catch (err) {
+      // Fallback for desktop or if sharing fails: copy to clipboard
+      const textArea = document.createElement("textarea");
+      textArea.value = confession.text;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        toast({
+          title: "Copied to clipboard!",
+          description: "Sharing is not available on this device, so the text was copied instead.",
+        });
+      } catch (copyErr) {
+        toast({
+          variant: "destructive",
+          title: "Action failed",
+          description: "Could not share or copy the confession.",
+        });
+      }
+      document.body.removeChild(textArea);
+    }
   };
 
+
   return (
-    <Card className="w-full overflow-hidden rounded-2xl border border-slate-700/50 bg-black/70 backdrop-blur-xl font-body shadow-lg shadow-sky-500/10">
-      <CardHeader className="flex flex-row items-center justify-between p-4">
-        <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src="/icons/dp.png" alt="User Avatar" />
-              <AvatarFallback>🕶️</AvatarFallback>
-            </Avatar>
-            <div className="text-sm">
-              <p className="font-semibold text-sky-400">anon::{confession.anonHash.substring(0, 6)}</p>
-              <p className="text-slate-400">{timeAgo}</p>
+    <>
+      {/* ✨ NEW: This loads the html2canvas library, making it available on the window object */}
+      <Script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" strategy="lazyOnload" />
+      <Card ref={cardRef} className="w-full overflow-hidden rounded-2xl border border-slate-700/50 bg-black/70 backdrop-blur-xl font-body shadow-lg shadow-sky-500/10">
+        <CardHeader className="flex flex-row items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src="/icons/dp.png" alt="User Avatar" />
+                <AvatarFallback>🕶️</AvatarFallback>
+              </Avatar>
+              <div className="text-sm">
+                <p className="font-semibold text-sky-400">anon::{confession.anonHash.substring(0, 6)}</p>
+                <p className="text-slate-400">{timeAgo}</p>
+              </div>
+          </div>
+          <div className="relative" ref={menuRef}>
+              <Button onClick={() => setShowReportMenu(!showReportMenu)} disabled={isPending} variant="ghost" size="icon" className="h-10 w-10 rounded-full text-slate-400 transition-all duration-200 hover:bg-slate-800/50 active:scale-90">
+                  <MoreVertical className="h-5 w-5" />
+              </Button>
+              {showReportMenu && (
+                  <div className="absolute top-12 right-0 z-10 w-40 origin-top-right rounded-md bg-slate-800/90 backdrop-blur-md border border-slate-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none animate-fade-in-slow">
+                      <div className="py-1">
+                          <button
+                              onClick={() => onReport(confession.id, 'confession')}
+                              className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-red-500/10"
+                          >
+                              <Flag className="mr-3 h-5 w-5" />
+                              <span>Report</span>
+                          </button>
+                      </div>
+                  </div>
+              )}
+          </div>
+        </CardHeader>
+
+        <CardContent className="px-4 pb-2">
+          <CodeSyntaxHighlighter text={confession.text} />
+        </CardContent>
+
+        <CardFooter className="flex flex-col gap-3 p-4">
+          <div className="flex w-full items-center">
+            <div className="flex items-center gap-1">
+              <Button onClick={onLike} disabled={isPending} variant="ghost" className="flex h-10 w-16 items-center justify-center gap-2 rounded-full p-0 text-slate-400 transition-all duration-200 hover:bg-green-500/10 active:scale-90">
+                <span className={cn('text-sm font-medium', confession.userInteraction === 'like' && 'text-green-400')}>{confession.likes}</span>
+                <Heart className={cn('h-5 w-5', confession.userInteraction === 'like' && 'fill-current text-green-400')} />
+              </Button>
+              <Button onClick={onDislike} disabled={isPending} variant="ghost" className="flex h-10 w-16 items-center justify-center gap-2 rounded-full p-0 text-slate-400 transition-all duration-200 hover:bg-red-500/10 active:scale-90">
+                <span className={cn('text-sm font-medium', confession.userInteraction === 'dislike' && 'text-red-400')}>{confession.dislikes}</span>
+                <ThumbsDown className={cn('h-5 w-5', confession.userInteraction === 'dislike' && 'fill-current text-red-400')} />
+              </Button>
+              <Button onClick={() => setShowComments(!showComments)} variant="ghost" className="flex h-10 w-16 items-center justify-center gap-2 rounded-full p-0 text-slate-400 transition-all duration-200 hover:bg-sky-500/10 active:scale-90">
+                <span className="text-sm tabular-nums">{confession.comments.length}</span>
+                <MessageSquare className="h-5 w-5" />
+              </Button>
             </div>
-        </div>
-        {/* ✨ MODIFIED: This container is now relative for positioning the menu */}
-        <div className="relative" ref={menuRef}>
-            <Button onClick={() => setShowReportMenu(!showReportMenu)} disabled={isPending} variant="ghost" size="icon" className="h-10 w-10 rounded-full text-slate-400 transition-all duration-200 hover:bg-slate-800/50 active:scale-90">
-                <MoreVertical className="h-5 w-5" />
-            </Button>
-            {/* ✨ NEW: The report popover menu */}
-            {showReportMenu && (
-                <div className="absolute top-12 right-0 z-10 w-40 origin-top-right rounded-md bg-slate-800/90 backdrop-blur-md border border-slate-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none animate-fade-in-slow">
-                    <div className="py-1">
-                        <button
-                            onClick={() => onReport(confession.id, 'confession')}
-                            className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-red-500/10"
-                        >
-                            <Flag className="mr-3 h-5 w-5" />
-                            <span>Report</span>
-                        </button>
-                    </div>
-                </div>
-            )}
-        </div>
-      </CardHeader>
-
-      <CardContent className="px-4 pb-2">
-        <CodeSyntaxHighlighter text={confession.text} />
-      </CardContent>
-
-      <CardFooter className="flex flex-col gap-3 p-4">
-        <div className="flex w-full items-center">
-          <div className="flex items-center gap-1">
-            <Button onClick={onLike} disabled={isPending} variant="ghost" className="flex h-10 w-16 items-center justify-center gap-2 rounded-full p-0 text-slate-400 transition-all duration-200 hover:bg-green-500/10 active:scale-90">
-              <span className={cn('text-sm font-medium', confession.userInteraction === 'like' && 'text-green-400')}>{confession.likes}</span>
-              <Heart className={cn('h-5 w-5', confession.userInteraction === 'like' && 'fill-current text-green-400')} />
-            </Button>
-            <Button onClick={onDislike} disabled={isPending} variant="ghost" className="flex h-10 w-16 items-center justify-center gap-2 rounded-full p-0 text-slate-400 transition-all duration-200 hover:bg-red-500/10 active:scale-90">
-              <span className={cn('text-sm font-medium', confession.userInteraction === 'dislike' && 'text-red-400')}>{confession.dislikes}</span>
-              <ThumbsDown className={cn('h-5 w-5', confession.userInteraction === 'dislike' && 'fill-current text-red-400')} />
-            </Button>
-            <Button onClick={() => setShowComments(!showComments)} variant="ghost" className="flex h-10 w-16 items-center justify-center gap-2 rounded-full p-0 text-slate-400 transition-all duration-200 hover:bg-sky-500/10 active:scale-90">
-              <span className="text-sm tabular-nums">{confession.comments.length}</span>
-              <MessageSquare className="h-5 w-5" />
-            </Button>
+            <div className="ml-auto">
+              <Button onClick={onShare} disabled={isPending} variant="ghost" size="icon" className="h-10 w-10 rounded-full text-slate-400 transition-all duration-200 hover:bg-sky-500/10 hover:text-sky-400 active:scale-90">
+                <Share2 className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
-          <div className="ml-auto">
-            <Button onClick={onShare} disabled={isPending} variant="ghost" size="icon" className="h-10 w-10 rounded-full text-slate-400 transition-all duration-200 hover:bg-sky-500/10 hover:text-sky-400 active:scale-90">
-              <Share2 className="h-5 w-5" />
-            </Button>
+          
+          <div className={cn('w-full transition-all duration-500 ease-in-out overflow-hidden', showComments ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0')}>
+            {showComments && <CommentsSection confession={confession} onReport={onReport} refresh={refresh} />}
           </div>
-        </div>
-        
-        <div className={cn('w-full transition-all duration-500 ease-in-out overflow-hidden', showComments ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0')}>
-          {showComments && <CommentsSection confession={confession} onReport={onReport} refresh={refresh} />}
-        </div>
-      </CardFooter>
-    </Card>
+        </CardFooter>
+      </Card>
+    </>
   );
 }
