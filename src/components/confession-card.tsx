@@ -137,11 +137,11 @@ function CommentThread({
     <div className="flex flex-col">
       <div
         className={`flex gap-3 rounded-lg p-3 transition 
-        ${depth === 0 ? "bg-gray-900/60 hover:bg-gray-900/80" : "bg-gray-800/50 hover:bg-gray-800/70"}
-        `}
+        ${depth === 0 ? "bg-gray-900/60 hover:bg-gray-900/80" : "bg-gray-800/50 hover:bg-gray-800/70"}`}
       >
+        {/* Avatar + Name + Time */}
         <Avatar className="h-7 w-7 shrink-0">
-          <AvatarImage src="/icon/dp.png" alt="anon" />
+          <AvatarImage src="/icons/dp.png" alt="anon" />
           <AvatarFallback>🕶️</AvatarFallback>
         </Avatar>
         <div className="flex-1">
@@ -229,7 +229,7 @@ function CommentsSection({
     <div className="w-full space-y-4 border-t border-accent/30 pt-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-accent/40">
       <div className="flex items-start gap-3">
         <Avatar className="h-7 w-7 shrink-0">
-          <AvatarImage src="/icon/dp.png" alt="anon" />
+          <AvatarImage src="/icons/dp.png" alt="anon" />
           <AvatarFallback>🕶️</AvatarFallback>
         </Avatar>
         <CommentForm confessionId={confession.id} onCommentAdded={refresh} />
@@ -312,15 +312,16 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
 
   return (
     <Card className="w-full overflow-hidden rounded-xl border border-accent/40 bg-black/90 font-mono shadow-[0_0_18px_#00ffe0]">
+      {/* Header: DP + name + time */}
       <CardHeader className="flex items-center justify-between px-4 py-2 text-xs text-gray-400">
         <div className="flex items-center gap-2">
           <Avatar className="h-6 w-6">
-            <AvatarImage src="/icon/dp.png" alt="anon" />
+            <AvatarImage src="/icons/dp.png" alt="anon" />
             <AvatarFallback>🕶️</AvatarFallback>
           </Avatar>
           <span className="truncate text-accent">anon::{confession.anonHash.substring(0, 6)}</span>
+          <span className="text-gray-500">• {timeAgo}</span>
         </div>
-        <span>{timeAgo}</span>
       </CardHeader>
 
       <CardContent className="px-4 py-2">
