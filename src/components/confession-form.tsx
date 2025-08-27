@@ -95,7 +95,7 @@ export default function ConfessionForm() {
         <div className="text-center mb-2">
           <h2 className="flex items-center justify-center gap-2 text-xl sm:text-2xl text-cyan-400 drop-shadow-[0_0_6px_#00eaff]">
             <Terminal className="h-5 w-5" />
-            <span className="cursor-blink">Drop Your Confession</span>
+            <span className="cursor-blink">Confession Here</span>
           </h2>
           <p className="text-xs text-cyan-500 sm:text-sm">
             Write anything anonymously and hit 'Confess'
@@ -105,7 +105,7 @@ export default function ConfessionForm() {
         {/* 📝 Input */}
         <Textarea
           name="confession"
-          placeholder="> I skipped DSA class to play Valorant..."
+          placeholder="> Mera bestfriend Gay hai..."
           rows={5}
           required
           minLength={10}
