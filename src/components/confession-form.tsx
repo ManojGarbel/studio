@@ -35,7 +35,9 @@ function SubmitButton() {
     <Button
       type="submit"
       disabled={pending}
-      className="font-mono text-sm text-green-400 bg-transparent border border-green-400 rounded-none h-auto px-4 py-1 hover:bg-green-400/10 hover:shadow-[0_0_15px_rgba(57,255,20,0.5)] active:scale-95 transition-all"
+      className="font-mono text-sm text-green-300 bg-green-900/50 border border-green-500/30 rounded-md h-auto px-6 py-2 
+                 hover:bg-green-500/20 hover:border-green-400 hover:text-green-200 hover:shadow-[0_0_15px_rgba(57,255,20,0.5)] 
+                 active:scale-95 transition-all duration-300"
     >
       {pending ? (
         <span className="flex items-center gap-2">
@@ -43,7 +45,7 @@ function SubmitButton() {
           <span>submitting...</span>
         </span>
       ) : (
-        <span>[ Submit ]</span>
+        <span>Transmit</span>
       )}
     </Button>
   );
@@ -81,7 +83,7 @@ export default function ConfessionForm() {
   }, [state, toast, playSubmitSound]);
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-4 font-mono bg-[#0a0a0a]">
+    <div className="w-full max-w-2xl mx-auto p-4 font-mono bg-[#0a0a0a] rounded-lg border border-green-500/20">
       <form action={formAction} ref={formRef} className="flex flex-col gap-4">
         {/* Terminal Header */}
         <div className="flex items-center gap-2 text-xl sm:text-2xl text-green-400">
