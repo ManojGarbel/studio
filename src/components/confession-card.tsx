@@ -227,6 +227,7 @@ function CommentsSection({
 
   return (
     <div className="w-full space-y-4 border-t border-accent/30 pt-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-accent/40">
+      {/* Comment Input */}
       <div className="flex items-start gap-3">
         <Avatar className="h-7 w-7 shrink-0">
           <AvatarImage src="/icons/dp.png" alt="anon" />
@@ -234,21 +235,35 @@ function CommentsSection({
         </Avatar>
         <CommentForm confessionId={confession.id} onCommentAdded={refresh} />
       </div>
+  
+      {/* Comments */}
       <div className="space-y-4">
         {nestedComments.map((comment) => (
-          <CommentThread
-            key={comment.id}
-            comment={comment}
-            onReport={onReport}
-            confessionId={confession.id}
-            refresh={refresh}
-          />
+          <div key={comment.id} className="flex items-start gap-3">
+            {/* Avatar */}
+            <Avatar className="h-8 w-8 shrink-0">
+              <AvatarImage src="/icons/dp.png" alt="anon" />
+              <AvatarFallback>🕶️</AvatarFallback>
+            </Avatar>
+  
+            {/* Comment Content */}
+            <div className="flex flex-col">
+              {/* Username + Timestamp */}
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="font-semibold">Anonymous</span>
+                <span>•</span>
+                <span>{new Date(comment.timestamp).toLocaleString()}</span>
+              </div>
+  
+              {/* Comment Text */}
+              <p className="text-sm">{comment.text}</p>
+            </div>
+          </div>
         ))}
       </div>
     </div>
   );
-}
-
+  
 // ---------------------------------------------------------------- //
 // 🃏 MAIN CONFESSION CARD
 // ---------------------------------------------------------------- //
