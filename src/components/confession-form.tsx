@@ -16,7 +16,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { submitConfession } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
-import { Terminal, Send } from 'lucide-react';
+import { PenSquare, Send } from 'lucide-react';
 import useSound from '@/hooks/use-sound';
 import { SOUNDS } from '@/lib/sounds';
 
@@ -28,7 +28,7 @@ function CharacterCounter({ count }: { count: number }) {
   return (
     <div
       className={`text-xs font-mono transition-colors ${
-        isOverLimit ? 'text-destructive' : 'text-muted-foreground'
+        isOverLimit ? 'text-red-400' : 'text-slate-400'
       }`}
     >
       {count} / {MAX_LENGTH}
@@ -36,28 +36,31 @@ function CharacterCounter({ count }: { count: number }) {
   );
 }
 
+/* 🚀 Submit Button Component */
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button
       type="submit"
       disabled={pending}
-      className="btn-hacker rounded-full px-4 py-1 text-sm" // Changed classes for size and shape
+      className="bg-sky-500 hover:bg-sky-600 text-white rounded-full px-6 py-2 text-sm font-semibold transition-all active:scale-95"
     >
       {pending ? (
         <span className="flex items-center gap-2">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent border-green-400"></span>
-          <span className="cursor-blink">Posting...</span>
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent border-white"></span>
+          <span>Posting...</span>
         </span>
       ) : (
         <span className="flex items-center gap-2">
           <Send className="h-4 w-4" />
-          <span className="cursor-blink">Confess()</span>
+          <span>Confess</span>
         </span>
       )}
     </Button>
   );
 }
+
+/* 📝 Main Confession Form Component */
 export default function ConfessionForm() {
   const { toast } = useToast();
   const [state, formAction] = useActionState(submitConfession, {
@@ -73,7 +76,7 @@ export default function ConfessionForm() {
       if (state.success) {
         playSubmitSound();
         toast({
-          title: '✅ Submission Complete!',
+          title: '✅ Confession Submitted!',
           description: state.message,
         });
         formRef.current?.reset();
@@ -90,36 +93,38 @@ export default function ConfessionForm() {
 
   return (
     <div className="w-full px-3 sm:px-0">
-      <Card className="scanlines mx-auto max-w-lg rounded-2xl border border-accent/40 bg-black/90 font-mono shadow-[0_0_20px_#39ff14]">
+      <Card className="mx-auto max-w-lg rounded-2xl border border-slate-700/50 bg-black/70 backdrop-blur-xl font-body shadow-lg shadow-sky-500/10">
         <form action={formAction} ref={formRef} className="flex flex-col gap-4">
-          {/* 🖥️ Header */}
-          <CardHeader className="px-4 pb-2 pt-4 text-center">
-            <CardTitle className="glitch flex items-center justify-center gap-2 text-xl text-accent sm:text-2xl">
-              <Terminal className="h-5 w-5" />
-              <span>Confess Now</span>
-            </CardTitle>
-            <CardDescription className="cursor-blink text-xs text-muted-foreground sm:text-sm">
-              just write your confession and hit 'Confess' 
+          {/* Header */}
+          <CardHeader className="text-center p-4">
+            <div className="flex justify-center items-center gap-2">
+                <PenSquare className="h-6 w-6 text-sky-400" />
+                <CardTitle className="text-2xl font-bold text-sky-400">
+                    Share Your Confession
+                </CardTitle>
+            </div>
+            <CardDescription className="text-sm text-slate-400 mt-1">
+              Your identity will remain anonymous.
             </CardDescription>
           </CardHeader>
 
-          {/* 📝 Input */}
+          {/* Input */}
           <CardContent className="px-4">
             <Textarea
               name="confession"
-              placeholder="> Mera best friend gay hai..."
+              placeholder="I once pushed directly to the main branch on a Friday..."
               rows={5}
               required
               minLength={10}
               maxLength={MAX_LENGTH}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="font-code rounded-lg border border-accent/40 bg-black/70 p-3 text-sm text-string shadow-[0_0_12px_#39ff14] resize-none transition-shadow focus:border-accent/80 focus:shadow-[0_0_16px_#39ff14] focus:ring-accent/80 sm:text-base"
+              className="font-body rounded-lg border-2 border-slate-700 bg-slate-800/80 p-3 text-sm text-slate-200 resize-none transition-shadow focus:border-sky-500 focus:shadow-lg focus:shadow-sky-500/20 focus:ring-1 focus:ring-sky-500"
             />
           </CardContent>
 
-          {/* 🚀 Footer */}
-          <CardFooter className="flex items-center justify-between px-4 pb-4">
+          {/* Footer */}
+          <CardFooter className="flex items-center justify-between p-4">
             <CharacterCounter count={content.length} />
             <SubmitButton />
           </CardFooter>
