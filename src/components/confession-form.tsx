@@ -1,64 +1,65 @@
-"use client";
+'use client';
 
-import { useActionState } from "react";
-import { useFormStatus } from "react-dom";
-import { useEffect, useRef, useState } from "react";
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
+import { useEffect, useRef, useState } from 'react';
 
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { submitConfession } from "@/lib/actions";
-import { useToast } from "@/hooks/use-toast";
-import { Terminal, Send } from "lucide-react";
-import useSound from "@/hooks/use-sound";
-import { SOUNDS } from "@/lib/sounds";
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { submitConfession } from '@/lib/actions';
+import { useToast } from '@/hooks/use-toast';
+import useSound from '@/hooks/use-sound';
+import { SOUNDS } from '@/lib/sounds';
 
 const MAX_LENGTH = 1000;
 
-/* 📊 Character Counter Component */
+/* 📊 Terminal-style Character Counter */
 function CharacterCounter({ count }: { count: number }) {
   const isOverLimit = count > MAX_LENGTH;
   return (
     <div
-      className={`text-xs font-mono transition-colors ${
-        isOverLimit ? "text-red-500" : "text-green-400"
+      className={`font-mono text-xs transition-colors ${
+        isOverLimit ? 'text-red-500' : 'text-green-400/70'
       }`}
     >
-      {count} / {MAX_LENGTH}
+      <span>char_count: {count}/{MAX_LENGTH}</span>
     </div>
   );
 }
 
+/* 🚀 Mobile-friendly CLI Submit Button */
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button
       type="submit"
       disabled={pending}
-      className="rounded-md border border-green-500 bg-black px-4 py-1 text-green-400 font-mono hover:bg-green-500 hover:text-black transition-all"
+      className="w-full sm:w-auto font-mono text-sm text-black bg-green-400 border border-green-500 
+                 rounded-xl px-4 py-2 transition-all shadow-[0_0_12px_rgba(57,255,20,0.6)]
+                 hover:bg-green-300 hover:shadow-[0_0_18px_rgba(57,255,20,0.8)]
+                 active:translate-y-[2px] active:shadow-none disabled:opacity-60"
     >
       {pending ? (
         <span className="flex items-center gap-2">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent border-green-400"></span>
-          <span className="cursor-blink">Posting...</span>
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent border-black"></span>
+          <span>sending...</span>
         </span>
       ) : (
-        <span className="flex items-center gap-2">
-          <Send className="h-4 w-4" />
-          <span className="cursor-blink">Confess()</span>
-        </span>
+        <span className="tracking-wider">[ Submit ]</span>
       )}
     </Button>
   );
 }
 
+/* 📝 Main Hacker Terminal Form */
 export default function ConfessionForm() {
   const { toast } = useToast();
   const [state, formAction] = useActionState(submitConfession, {
-    message: "",
+    message: '',
     success: false,
   });
   const formRef = useRef<HTMLFormElement>(null);
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState('');
   const playSubmitSound = useSound(SOUNDS.submit);
 
   useEffect(() => {
@@ -66,15 +67,15 @@ export default function ConfessionForm() {
       if (state.success) {
         playSubmitSound();
         toast({
-          title: "✅ Submission Complete!",
+          title: '✅ Transmission Complete',
           description: state.message,
         });
         formRef.current?.reset();
-        setContent(""); // Reset character counter state
+        setContent('');
       } else {
         toast({
-          variant: "destructive",
-          title: "⚠️ Submission Failed",
+          variant: 'destructive',
+          title: '⚠️ Transmission Failed',
           description: state.message,
         });
       }
@@ -82,38 +83,40 @@ export default function ConfessionForm() {
   }, [state, toast, playSubmitSound]);
 
   return (
-    <div className="w-full px-3 sm:px-0">
+    <div className="w-full max-w-3xl mx-auto p-6 font-mono">
       <form
         action={formAction}
         ref={formRef}
-        className="flex flex-col gap-4 mx-auto max-w-lg font-mono"
+        className="flex flex-col gap-4 rounded-2xl border border-green-500/40 bg-[#0d0d0d]/95 
+                   shadow-[0_0_25px_rgba(57,255,20,0.4)] p-6"
       >
-        {/* 🖥️ Header */}
-        <div className="text-center mb-2">
-          <h2 className="flex items-center justify-center gap-2 text-xl sm:text-2xl text-green-400">
-            <Terminal className="h-5 w-5" />
-            <span className="cursor-blink">Confess Now</span>
-          </h2>
-          <p className="text-xs text-green-600 sm:text-sm">
-            just write your confession and hit 'Confess'
-          </p>
-        </div>
+        {/* Terminal Header */}
+        <label
+          htmlFor="confession-input"
+          className="text-green-400 text-base sm:text-lg tracking-wide"
+        >
+          $ enter_confession:
+        </label>
 
-        {/* 📝 Input */}
+        {/* Terminal Input */}
         <Textarea
+          id="confession-input"
           name="confession"
-          placeholder="> Mera best friend gay hai..."
-          rows={5}
+          placeholder="> I once pushed directly to main on Friday..."
+          rows={6}
           required
           minLength={10}
           maxLength={MAX_LENGTH}
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="rounded-md border border-green-500 bg-black p-3 text-sm text-green-400 shadow-[0_0_10px_#39ff14] resize-none transition focus:shadow-[0_0_16px_#39ff14] focus:ring-green-400 sm:text-base"
+          className="bg-transparent border-2 border-green-500/40 rounded-xl p-3 text-base text-green-300 resize-none
+                     shadow-[0_0_12px_rgba(57,255,20,0.2)]
+                     focus:border-green-400 focus:shadow-[0_0_20px_rgba(57,255,20,0.6)]
+                     focus:ring-0 focus:outline-none transition-all duration-300"
         />
 
-        {/* 🚀 Footer */}
-        <div className="flex items-center justify-between">
+        {/* Footer */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <CharacterCounter count={content.length} />
           <SubmitButton />
         </div>
