@@ -40,7 +40,7 @@ interface Confession extends BaseConfession {
 // 🎨 SYNTAX HIGHLIGHTER
 // ---------------------------------------------------------------- //
 const SYNTAX_HIGHLIGHT_COLORS = { keyword: 'text-keyword', string: 'text-string', number: 'text-number', default: 'text-default' };
-const KEYWORDS = ['fix','bug','error','pushed','main','production','friday','debug','console.log','git','commit','database','server','client','react','javascript','typescript','css','html','python','java','c#','c++','php','ruby','go','rust','sql'];
+const KEYWORDS = ['Hakkan','fix','bug','error','pushed','main','production','friday','debug','console.log','git','commit','database','server','client','react','javascript','typescript','css','html','python','java','c#','c++','php','ruby','go','rust','sql'];
 const CodeSyntaxHighlighter = ({ text }: { text: string }) => {
   return (
     <pre className="whitespace-pre-wrap break-words font-code text-sm leading-relaxed">
@@ -134,7 +134,7 @@ function CommentThread({
             <div className="rounded-md border border-secondary/30 bg-secondary/10 p-2 text-xs sm:text-sm">
               <div className="flex items-center gap-2">
                 <Avatar className="h-5 w-5">
-                  <AvatarImage src="/incognito.png" alt="anon" />
+                  <AvatarImage src="icons/dp.png" alt="anon" />
                   <AvatarFallback>🕶️</AvatarFallback>
                 </Avatar>
                 <p className="text-accent">
@@ -315,7 +315,7 @@ export function ConfessionCard({ confession: initialConfession }: { confession: 
       <CardHeader className="flex items-center justify-between px-4 py-2 text-xs text-muted-foreground">
         <div className="flex items-center gap-2">
           <Avatar className="h-6 w-6">
-            <AvatarImage src="/incognito.png" alt="anon" />
+            <AvatarImage src="icons/dp.png" alt="anon" />
             <AvatarFallback>🕶️</AvatarFallback>
           </Avatar>
           <span className="truncate text-accent">
