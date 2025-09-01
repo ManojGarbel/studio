@@ -1,3 +1,4 @@
+
 import type { Metadata, Viewport } from "next";
 import { Inter, Source_Code_Pro } from "next/font/google";
 import "./globals.css";
@@ -117,7 +118,7 @@ export default function RootLayout({
       href="https://github.com/HakkanShah"
       target="_blank"
       rel="noopener noreferrer"
-      className="underline decoration-dotted hover:text-primary transition-colors"
+      className="underline decoration-dotted text-accent hover:text-primary transition-colors"
     >
       Hakkan
     </a>
