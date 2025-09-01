@@ -9,6 +9,9 @@
   <p align="center">
     <a href="https://concode.vercel.app/" target="_blank"><strong>View Live Demo »</strong></a>
   </p>
+  <p align="center">
+    Created by <a href="https://www.github.com/HakkanShah" target="_blank"><strong>Hakkan Shah</strong></a>
+  </p>
 </div>
 
 ---
