@@ -85,9 +85,11 @@ const Header = () => {
             sequence={[
               "<ConfessCode/>",
               1000,
-              "<Confe/>",
+              "<Anonymous/>",
               1000,
-              "<ssCode/>",
+              "<Secrects/>",
+              1000,
+              "<Nobody Knows/>",
               1000,
               "<ConfessCode/>",
               1000,
