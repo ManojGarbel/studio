@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import InfoDialog from "./info-dialog";
+import { TypeAnimation } from "react-type-animation";
 
 const Header = () => {
   const [isActivated, setIsActivated] = useState(false);
@@ -79,12 +81,22 @@ const Header = () => {
           >
             <Code2 className="h-6 w-6" />
           </div>
-          <Link
-            href="/"
+          <TypeAnimation
+            sequence={[
+              "<ConfessCode/>",
+              1000,
+              "<Confe/>",
+              1000,
+              "<ssCode/>",
+              1000,
+              "<ConfessCode/>",
+              1000,
+            ]}
+            wrapper="span"
+            speed={50}
             className="text-base sm:text-lg font-code font-bold tracking-wide text-accent hover:text-primary transition-colors"
-          >
-            &lt;ConfessCode/&gt;
-          </Link>
+            repeat={Infinity}
+          />
         </div>
 
         {/* 🔐 Right Section */}
